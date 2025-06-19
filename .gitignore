@@ -1,0 +1,21 @@
+# .gitignore
+
+# Node
+node_modules/
+dist/
+.env
+*.log
+
+# Vite
+.vite/
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+
+# Typescript
+*.tsbuildinfo
