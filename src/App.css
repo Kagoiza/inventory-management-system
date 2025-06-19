@@ -1,0 +1,70 @@
+/* Light mode (default) */
+.app {
+  display: flex;
+  font-family: 'Segoe UI', sans-serif;
+  background: #f7f9fb;
+  color: #000;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+  padding: 20px;
+}
+
+/* Dark mode styles */
+body.dark .app {
+  background: #1e1e1e;
+  color: #f1f1f1;
+}
+
+body.dark main {
+  background-color: #1e1e1e;
+  color: #f1f1f1;
+}
+
+/* Optional: improve visibility of card/table/sidebar elements in dark mode */
+body.dark .card {
+  background-color: #2a2a2a;
+  color: #fff;
+}
+
+body.dark .sidebar {
+  background-color: #2c2c2c;
+  color: #eee;
+}
+
+body.dark .table-container {
+  background-color: #2a2a2a;
+  color: #fff;
+}
+
+body.dark table {
+  background-color: #2a2a2a;
+  color: #fff;
+}
+
+body.dark th, body.dark td {
+  border-color: #444;
+}
+
+body.dark button {
+  background-color: #444;
+  color: #fff;
+  border: 1px solid #666;
+}
+
+/* Optional: toggle button styling */
+.theme-toggle {
+  margin: 10px 0;
+  padding: 8px 14px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+body.dark .theme-toggle {
+  background-color: #555;
+}
