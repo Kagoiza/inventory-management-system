@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ICTA IIMS - Register</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="register-container">
+    <h2>ICTA Inventory System - Register</h2>
+    <form id="registerForm">
+      <label for="fullname">Full Name</label>
+      <input type="text" id="fullname" name="fullname" required />
+
+      <label for="department">Department</label>
+      <input type="text" id="department" name="department" required />
+
+      <label for="email">Email</label>
+      <input type="email" id="email" name="email" required />
+
+      <label for="phone">Phone Number</label>
+      <input type="tel" id="phone" name="phone" required />
+
+      <label for="stafftype">Staff Type</label>
+      <select id="stafftype" name="stafftype" required>
+        <option value="">Select</option>
+        <option value="Permanent">Permanent</option>
+        <option value="Intern">Intern</option>
+        <option value="Temporary">Temporary</option>
+      </select>
+
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" required />
+
+      <label for="confirmPassword">Confirm Password</label>
+      <input type="password" id="confirmPassword" name="confirmPassword" required />
+
+      <button type="submit">Register</button>
+    </form>
+    <p>Already have an account? <a href="login.html">Login here</a></p>
+  </div>
+
+  <script type="module" src="register.js"></script>
+</body>
+</html>
