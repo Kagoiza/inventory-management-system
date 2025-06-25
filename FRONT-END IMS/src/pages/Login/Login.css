@@ -152,7 +152,7 @@
 }
 
 /* Login Image */
-.login-image {
+.register-image {
   flex: 1;
   background: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQrK5OWXGCvR6zFU5zmAXDlV4LgfXPqq7dTg&s');
   background-size: contain;
