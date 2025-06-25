@@ -24,7 +24,7 @@ const Login = () => {
           <button className="login-btn">Login</button>
 
           <p className="register-text">
-            Not registered yet? <a href="/register">Create a new account</a>
+            Not registered yet? <a href="/Register">Create a new account</a>
           </p>
         </div>
 
