@@ -74,15 +74,17 @@ input[type="password"] {
   font-weight: 500;
   text-decoration: underline;
 }
-
 .register-image {
   flex: 1;
+  background: url('https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSQrK5OWXGCvR6zFU5zmAXDlV4LgfXPqq7dTg&s');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
+  align-items: flex-end;
+  padding: 40px;
+  color: white;
 }
-
 .register-image img {
   width: 100%;
   max-width: 200px;
