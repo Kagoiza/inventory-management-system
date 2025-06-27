@@ -6,7 +6,6 @@ const Register = () => {
     <div className="register-container">
       <div className="register-box">
         <div className="register-form">
-          <div className="orange-box"></div>
           <h2>Create Account</h2>
           <p className="subtext">Join us and start managing your inventory</p>
 
