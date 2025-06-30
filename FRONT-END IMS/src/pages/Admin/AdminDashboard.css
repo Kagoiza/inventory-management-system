@@ -55,7 +55,7 @@
 
 .sidebar ul li:hover {
   background-color: #f0f7ff;
-  color: #1976d2;
+  color: #19b33b;
 }
 
 .sidebar ul li svg {
@@ -155,7 +155,7 @@
 
 /* Specific card styles - Only Total Stock has colored background */
 .card.blue {
-  background: linear-gradient(135deg, #388e3c, #2e7d32);
+  background: #19b33b;
   color: white;
   border: none;
 }

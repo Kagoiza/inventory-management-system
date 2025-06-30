@@ -190,7 +190,7 @@ h1 {
 }
 
 .card.green {
-  background: var(--primary-color);
+  background: #19b33b;
   color: white;
   border-color: transparent;
 }

@@ -50,14 +50,13 @@ const AdminDashboard = () => {
 
       <main className="main-content">
         <header className="main-header">
-          <img src="/icta-logo.png" alt="ICTA Logo" />
-          <h1>Admin Dashboard</h1>
+          <h1>Hello Brian</h1>
         </header>
 
         <div className="stat-cards">
           <div className="card blue"><h4>Total Stock</h4><p>3,000</p></div>
           <div className="card red"><h4>Low Stock</h4><p>30</p></div>
-          <div className="card green"><h4>Issued Today</h4><p>75</p></div>
+          <div className="card white"><h4>Issued Today</h4><p>75</p></div>
           <div className="card yellow"><h4>Pending Returns</h4><p>12</p></div>
         </div>
 

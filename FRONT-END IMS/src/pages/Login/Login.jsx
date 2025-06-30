@@ -6,7 +6,6 @@ const Login = () => {
     <div className="login-container">
       <div className="login-box">
         <div className="login-form">
-          <div className="orange-box"></div>
           <h2>Login</h2>
           <p className="subtext">See your growth and get support</p>
           <label>Email*</label>
