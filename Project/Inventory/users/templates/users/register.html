@@ -1,0 +1,96 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register</title>
+    <link rel="stylesheet" href="{% static 'users/css/register.css' %}"> {# Assuming you'll have a register.css #}
+</head>
+<body class="body-styles">
+    <div class="register-container">
+        <div class="register-box">
+            <div class="register-form">
+                <div class="orange-box"></div>
+                <h2 class="form-title">Register</h2>
+                <p class="subtext">Join us and manage your inventory</p>
+
+                <form method="POST" class="form-styles">
+                    {% csrf_token %} {# <--- ADD THIS LINE HERE! #}
+
+                    {# Display general form errors (e.g., if passwords don't match) #}
+                    {% if form.non_field_errors %}
+                        <ul class="errorlist non-field-errors">
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    {# Render username field #}
+                    <div>
+                        <label for="{{ form.username.id_for_label }}" class="label-styles">Username*</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.username.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+
+                    {# Render email field #}
+                    <div>
+                        <label for="{{ form.email.id_for_label }}" class="label-styles">Email*</label>
+                        {{ form.email }}
+                        {% if form.email.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.email.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+
+                    {# Render password field (password1) #}
+                    <div>
+                        <label for="{{ form.password.id_for_label }}" class="label-styles">Password*</label>
+                        {{ form.password }}
+                        {% if form.password.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.password.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+
+                    {# Render password confirmation field (password2) #}
+                    <div>
+                        <label for="{{ form.password2.id_for_label }}" class="label-styles">Confirm Password*</label>
+                        {{ form.password2 }}
+                        {% if form.password2.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.password2.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+
+                    <button type="submit" class="register-btn">Register</button>
+                </form>
+
+                <p class="login-link">
+                    Already have an account? <a href="{% url 'login' %}">Login here</a>
+                </p>
+            </div>
+
+            <div class="register-image">
+                <!-- Image goes here -->
+            </div>
+        </div>
+    </div>
+</body>
+</html>

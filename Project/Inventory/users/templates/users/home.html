@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home - Inventory Management</title>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+        }
+        .container {
+            background-color: #ffffff;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            max-width: 600px;
+            width: 100%;
+        }
+        h1 {
+            color: #22C55E; /* Green color for heading */
+            margin-bottom: 20px;
+        }
+        p {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .logout-link {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #22C55E; /* Green button */
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s ease;
+        }
+        .logout-link:hover {
+            background-color: #16A34A; /* Darker green on hover */
+        }
+        .username {
+            font-weight: bold;
+            color: #1f2937;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Welcome, <span class="username">{{ user.username }}</span>!</h1>
+        <p>You have successfully logged in to the Inventory Management System.</p>
+        <p>This is your basic homepage. You can add more features here.</p>
+        <a href="{% url 'logout' %}" class="logout-link">Logout</a>
+    </div>
+</body>
+</html>

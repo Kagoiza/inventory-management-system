@@ -1,0 +1,86 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{% static 'users/css/login.css' %}">
+</head>
+<body class="body-styles">
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-form">
+                <div class="orange-box"></div>
+                <h2 class="form-title">Login</h2>
+                <p class="subtext">See your growth and get support</p>
+
+                {# Display messages (e.g., success, error) #}
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                <form method="POST" class="form-styles">
+                    {% csrf_token %} {# <--- ADD THIS LINE HERE! #}
+
+                    {# Render username field #}
+                    <div>
+                        <label for="{{ form.username.id_for_label }}" class="label-styles">Username*</label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.username.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+
+                    {# Render password field #}
+                    <div>
+                        <label for="{{ form.password.id_for_label }}" class="label-styles">Password*</label>
+                        {{ form.password }}
+                        {% if form.password.errors %}
+                            <ul class="errorlist">
+                                {% for error in form.password.errors %}
+                                    <li>{{ error }}</li>
+                                {% endfor %}
+                            </ul>
+                        {% endif %}
+                    </div>
+
+                    {# Display non-field errors (e.g., invalid credentials) #}
+                    {% if form.non_field_errors %}
+                        <ul class="errorlist non-field-errors">
+                            {% for error in form.non_field_errors %}
+                                <li>{{ error }}</li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    <div class="remember-forgot">
+                        <label class="remember-me-label">
+                            <input type="checkbox" class="checkbox-styles"> Remember me
+                        </label>
+                        <a href="#" class="forgot-password-link">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="login-btn">Login</button>
+
+                    <p class="register-text">
+                        Not registered yet? <a href="{% url 'register' %}" class="register-link">Create a new account</a>
+                    </p>
+                </form>
+            </div>
+
+            <div class="login-image">
+                <!-- Image goes here -->
+            </div>
+        </div>
+    </div>
+</body>
+</html>

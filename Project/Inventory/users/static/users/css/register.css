@@ -1,0 +1,167 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f3f4f6; /* Light gray background */
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem; /* Padding around the container */
+    margin: 0;
+}
+
+.register-container {
+    width: 100%;
+    max-width: 64rem; /* Max width for the container */
+    background-color: #ffffff; /* White background for the card */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Soft shadow */
+    border-radius: 1rem; /* Rounded corners */
+    overflow: hidden;
+    display: flex;
+    flex-direction: column; /* Stack columns on small screens */
+}
+
+@media (min-width: 768px) { /* On medium screens and up, arrange side-by-side */
+    .register-container {
+        flex-direction: row;
+    }
+}
+
+.register-form {
+    padding: 2rem; /* Padding inside the form section */
+    flex: 1; /* Allows the form to take available space */
+    position: relative; /* For positioning the orange box */
+    z-index: 20; /* Ensure form content is above orange box */
+}
+
+@media (min-width: 768px) { /* More padding on larger screens */
+    .register-form {
+        padding: 3rem;
+    }
+}
+
+/* The green box element */
+.orange-box { /* Class name remains orange-box for consistency with HTML, but color is green */
+    position: absolute;
+    top: -20px; /* Adjust position */
+    left: -20px; /* Adjust position */
+    width: 80px;
+    height: 80px;
+    background-color: #4CAF50; /* Changed from Coral to a shade of green */
+    border-radius: 12px; /* Rounded corners */
+    z-index: 10; /* Behind form content */
+}
+
+.form-title {
+    font-size: 2.25rem; /* Large font size for title */
+    font-weight: 700; /* Bold font */
+    margin-bottom: 0.5rem; /* Space below title */
+    color: #1f2937; /* Dark gray text */
+    position: relative;
+    z-index: 30;
+}
+
+.subtext {
+    color: #6b7280; /* Medium gray text */
+    margin-bottom: 1.5rem; /* Space below subtext */
+    position: relative;
+    z-index: 30;
+}
+
+.form-styles {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem; /* Space between form fields */
+    position: relative;
+    z-index: 30;
+}
+
+.label-styles {
+    display: block;
+    font-size: 0.875rem; /* Small font size for labels */
+    font-weight: 500; /* Medium font weight */
+    color: #374151; /* Darker gray text */
+    margin-bottom: 0.25rem; /* Small space below label */
+}
+
+.input-styles {
+    width: 100%;
+    padding: 0.5rem 1rem; /* Padding inside input fields */
+    border: 1px solid #d1d5db; /* Light gray border */
+    border-radius: 0.375rem; /* Slightly rounded corners */
+    outline: none; /* Remove default outline */
+}
+
+.input-styles:focus {
+    border-color: #4ADE80; /* Changed from Orange to a lighter green on focus */
+    box-shadow: 0 0 0 2px rgba(74, 222, 128, 0.5); /* Custom shadow for focus ring, matching green */
+}
+
+.register-btn {
+    width: 100%;
+    background-color: #22C55E; /* Changed from Orange to a shade of green */
+    color: #ffffff; /* White text */
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+    border-radius: 0.375rem;
+    font-weight: 600; /* Semi-bold text */
+    transition: background-color 0.3s ease-in-out; /* Smooth transition on hover */
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* Button shadow */
+    border: none;
+    cursor: pointer;
+}
+
+.register-btn:hover {
+    background-color: #16A34A; /* Changed from Darker Orange to a darker green on hover */
+}
+
+.login-link {
+    text-align: center;
+    color: #4b5563; /* Medium gray text */
+    margin-top: 1.5rem; /* Space above link */
+    position: relative;
+    z-index: 30;
+}
+
+.login-link a {
+    color: #22C55E; /* Changed to a shade of green for links */
+    text-decoration: none;
+    font-weight: 500; /* Medium font weight */
+}
+
+.login-link a:hover {
+    text-decoration: underline;
+}
+
+.register-image {
+    flex: 1; /* Allows image section to take available space */
+    display: none; /* Hidden by default on small screens */
+    background-image: url('https://placehold.co/600x400/4CAF50/FFFFFF?text=Register+Image'); /* Placeholder image changed to green */
+    background-size: cover;
+    background-position: center;
+    border-radius: 1rem; /* Rounded corners for the image section */
+}
+
+@media (min-width: 768px) { /* Display on medium screens and up */
+    .register-image {
+        display: block;
+    }
+}
+
+/* Styles for error messages */
+.errorlist {
+    color: #ef4444; /* Red text for errors */
+    font-size: 0.875rem; /* Small font size */
+    margin-top: 0.25rem; /* Small space above errors */
+    margin-bottom: 0.5rem;
+    padding-left: 0; /* Remove default list padding */
+    list-style: none; /* Remove bullet points */
+}
+
+.errorlist li {
+    margin-bottom: 0.25rem;
+}
+
+.errorlist.non-field-errors {
+    margin-bottom: 1rem; /* More space for general errors */
+    text-align: center;
+}

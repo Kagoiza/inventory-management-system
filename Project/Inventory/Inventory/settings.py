@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from django.contrib.messages import constants as messages # Import messages constants
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -32,6 +33,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     'django.contrib.admin',
+    'users.apps.UsersConfig',   # Custom user app
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
@@ -54,10 +56,11 @@ ROOT_URLCONF = 'Inventory.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
+        'DIRS': [], # You can add project-wide template directories here if needed, e.g., [BASE_DIR / 'templates']
+        'APP_DIRS': True, # This tells Django to look for a "templates" directory inside each installed app
         'OPTIONS': {
             'context_processors': [
+                'django.template.context_processors.debug', # Added debug context processor
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
@@ -115,8 +118,40 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+# Directory where Django will collect all static files for deployment
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+# Additional directories where Django will look for static files
+# This is useful for project-level static files not tied to a specific app.
+STATICFILES_DIRS = [
+    BASE_DIR / 'static', # Example: if you have a 'static' folder directly in your project root
+]
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+# --- Custom Authentication Settings ---
+# URL to redirect to after a user logs in successfully
+LOGIN_REDIRECT_URL = 'home' # 'home' is the name of your URL pattern for the homepage
+
+# URL to redirect to after a user logs out
+LOGOUT_REDIRECT_URL = 'login' # 'login' is the name of your URL pattern for the login page
+
+# The URL name for your login page. Used by the @login_required decorator.
+LOGIN_URL = 'login'
+
+
+# --- Messages Framework Configuration ---
+# This allows you to customize the CSS classes for different message levels.
+# Useful for styling messages (e.g., success, error) in your templates.
+MESSAGE_TAGS = {
+    messages.DEBUG: 'alert-info',
+    messages.INFO: 'alert-info',
+    messages.SUCCESS: 'alert-success',
+    messages.WARNING: 'alert-warning',
+    messages.ERROR: 'alert-danger',
+}
