@@ -29,7 +29,7 @@ urlpatterns = [
     # Adding the logout view from users.views
     path('logout/', user_views.logout_view, name='logout'),
     # Correcting the home view reference to use user_views
-    path('home/', user_views.home, name='home'),
+    path('', user_views.home, name='home'),
 ]
 
 # ONLY for development: Serve static files
