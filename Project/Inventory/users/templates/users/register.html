@@ -68,7 +68,7 @@
                         {{ form.password1 }}
                         {% if form.password1.errors %}
                             <ul class="errorlist">
-                                {% for error in form.password1.errors %}
+                                {% for error in form.password.errors %}
                                     <li>{{ error }}</li>
                                 {% endfor %}
                             </ul>

@@ -1,10 +1,11 @@
 from django.shortcuts import render, redirect
 from django.contrib import messages
-from django.contrib.auth import login as auth_login, authenticate, logout as auth_logout
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.forms import AuthenticationForm
-from .forms import CustomUserCreationForm # Your custom registration form
-from django.db import IntegrityError # Import IntegrityError
+from django.contrib.auth import login as auth_login, authenticate, logout as auth_logout # Import necessary auth functions
+from django.contrib.auth.decorators import login_required # For protecting the home page
+from django.contrib.auth.forms import AuthenticationForm # Django'is built-in login form
+from .forms import CustomUserCreationForm # Your custom registraton form
+from django.shortcuts import render
+from .models import ItemRequest
 
 # --- Registration View ---
 def register(request):
@@ -27,6 +28,10 @@ def register(request):
             except Exception as e:
                 messages.error(request, f'An unexpected error occurred: {e}. Please try again.')
                 return render(request, 'users/register.html', {'form': form})
+            user = form.save() # Save the new user to the database
+            auth_login(request, user) # Log the user in immediately
+            messages.success(request, f'Account created for {user.username}!')
+            return redirect('requestor_dashboard') # Redirect to the home page
         else:
             messages.error(request, 'Registration failed. Please correct the errors below.')
     else:
@@ -75,3 +80,22 @@ def home(request):
     A basic homepage view that requires the user to be logged in.
     """
     return render(request, 'users/home.html')
+
+# --- Basic Requestor Dashboard View ---
+@login_required
+
+@login_required
+def requestor_dashboard(request):
+    user_requests = ItemRequest.objects.filter(requestor=request.user)
+
+    # Count status totals
+    total_requests = user_requests.count()
+    approved_count = user_requests.filter(status='Approved').count()
+    pending_count = user_requests.filter(status='Pending').count()
+
+    return render(request, 'users/requestor_dashboard.html', {
+        'requests': user_requests,
+        'total_requests': total_requests,
+        'approved_count': approved_count,
+        'pending_count': pending_count,
+    })
