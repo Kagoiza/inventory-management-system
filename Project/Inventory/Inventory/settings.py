@@ -136,7 +136,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # --- Custom Authentication Settings ---
 # URL to redirect to after a user logs in successfully
-LOGIN_REDIRECT_URL = 'home' # 'home' is the name of your URL pattern for the homepage
+LOGIN_REDIRECT_URL = 'requestor_dashboard' # 'home' is the name of your URL pattern for the homepage
 
 # URL to redirect to after a user logs out
 LOGOUT_REDIRECT_URL = 'login' # 'login' is the name of your URL pattern for the login page
