@@ -15,10 +15,19 @@
                 <h2 class="form-title">Register</h2>
                 <p class="subtext">Join us and manage your inventory</p>
 
-                <form method="POST" class="form-styles">
-                    {% csrf_token %} {# <--- ADD THIS LINE HERE! #}
+                {# Display messages from django.contrib.messages #}
+                {% if messages %}
+                    <ul class="messages">
+                        {% for message in messages %}
+                            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
 
-                    {# Display general form errors (e.g., if passwords don't match) #}
+                <form method="POST" class="form-styles">
+                    {% csrf_token %} {# This is the crucial line for security! #}
+
+                    {# Display general form errors (e.g., if passwords don't match, or unique username error from view) #}
                     {% if form.non_field_errors %}
                         <ul class="errorlist non-field-errors">
                             {% for error in form.non_field_errors %}
@@ -28,7 +37,7 @@
                     {% endif %}
 
                     {# Render username field #}
-                    <div>
+                    <div class="form-group"> {# Added a class for potential styling #}
                         <label for="{{ form.username.id_for_label }}" class="label-styles">Username*</label>
                         {{ form.username }}
                         {% if form.username.errors %}
@@ -41,7 +50,7 @@
                     </div>
 
                     {# Render email field #}
-                    <div>
+                    <div class="form-group"> {# Added a class for potential styling #}
                         <label for="{{ form.email.id_for_label }}" class="label-styles">Email*</label>
                         {{ form.email }}
                         {% if form.email.errors %}
@@ -54,12 +63,12 @@
                     </div>
 
                     {# Render password field (password1) #}
-                    <div>
-                        <label for="{{ form.password.id_for_label }}" class="label-styles">Password*</label>
-                        {{ form.password }}
-                        {% if form.password.errors %}
+                    <div class="form-group"> {# Added a class for potential styling #}
+                        <label for="{{ form.password1.id_for_label }}" class="label-styles">Password*</label>
+                        {{ form.password1 }}
+                        {% if form.password1.errors %}
                             <ul class="errorlist">
-                                {% for error in form.password.errors %}
+                                {% for error in form.password1.errors %}
                                     <li>{{ error }}</li>
                                 {% endfor %}
                             </ul>
@@ -67,7 +76,7 @@
                     </div>
 
                     {# Render password confirmation field (password2) #}
-                    <div>
+                    <div class="form-group"> {# Added a class for potential styling #}
                         <label for="{{ form.password2.id_for_label }}" class="label-styles">Confirm Password*</label>
                         {{ form.password2 }}
                         {% if form.password2.errors %}
@@ -83,13 +92,12 @@
                 </form>
 
                 <p class="login-link">
-                    Already have an account? <a href="{% url 'login' %}">Login here</a>
+                    Already have an account? <a href="{% url 'users:login_view' %}">Login here</a> {# <--- THIS IS THE CRITICAL CHANGE #}
                 </p>
             </div>
 
             <div class="register-image">
-                <!-- Image goes here -->
-            </div>
+                </div>
         </div>
     </div>
 </body>

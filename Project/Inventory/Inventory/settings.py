@@ -136,14 +136,13 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # --- Custom Authentication Settings ---
 # URL to redirect to after a user logs in successfully
-LOGIN_REDIRECT_URL = 'home' # 'home' is the name of your URL pattern for the homepage
+LOGIN_REDIRECT_URL = 'users:home' # <--- CHANGED: Use namespaced URL
 
 # URL to redirect to after a user logs out
-LOGOUT_REDIRECT_URL = 'login' # 'login' is the name of your URL pattern for the login page
+LOGOUT_REDIRECT_URL = 'users:login_view' # <--- CHANGED: Use namespaced URL
 
 # The URL name for your login page. Used by the @login_required decorator.
-LOGIN_URL = 'login'
-
+LOGIN_URL = 'users:login_view' # <--- CHANGED: Use namespaced URL
 
 # --- Messages Framework Configuration ---
 # This allows you to customize the CSS classes for different message levels.
@@ -155,3 +154,10 @@ MESSAGE_TAGS = {
     messages.WARNING: 'alert-warning',
     messages.ERROR: 'alert-danger',
 }
+
+# --- Email Configuration for Password Reset ---
+# For development, use the console backend to print emails to the console.
+# This is crucial for testing password reset without a real email server.
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend' # <--- ADDED THIS LINE
+# You can optionally set a default from email, though not strictly required for console backend
+# DEFAULT_FROM_EMAIL = 'webmaster@yourdomain.com'
