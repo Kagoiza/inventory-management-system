@@ -7,6 +7,8 @@ from .forms import CustomUserCreationForm # Your custom registraton form
 from django.shortcuts import render
 from .models import ItemRequest
 from .models import InventoryItem
+from django.db import IntegrityError
+
 
 # --- Registration View ---
 def register(request):
