@@ -6,29 +6,48 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
     <link rel="stylesheet" href="{% static 'users/css/login.css' %}">
+    {# Include Tailwind CSS CDN for consistent styling with password reset templates #}
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .form-input {
+            @apply shadow-sm appearance-none border rounded-lg w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent;
+        }
+        .form-label {
+            @apply block text-gray-700 text-sm font-bold mb-2;
+        }
+        .btn-primary {
+            @apply bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-150 ease-in-out;
+        }
+        .errorlist li {
+            @apply text-red-600 text-sm mt-1;
+        }
+        /* Add any custom styles from your login.css here if needed, or ensure it's loaded after Tailwind if overriding */
+    </style>
 </head>
-<body class="body-styles">
-    <div class="login-container">
-        <div class="login-box">
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="login-container bg-white p-8 rounded-lg shadow-xl w-full max-w-md"> {# Added Tailwind classes to container #}
+        <div class="login-box"> {# This div might be redundant if login-container handles main layout #}
             <div class="login-form">
                 <div class="orange-box"></div>
-                <h2 class="form-title">Login</h2>
-                <p class="subtext">See your growth and get support</p>
+                <h2 class="form-title text-3xl font-bold text-gray-800 mb-6 text-center">Login</h2> {# Added Tailwind classes #}
+                <p class="subtext text-gray-600 text-center mb-6">See your growth and get support</p> {# Added Tailwind classes #}
 
                 {# Display messages (e.g., success, error) #}
                 {% if messages %}
-                    <ul class="messages">
+                    <ul class="messages mb-4"> {# Added Tailwind margin-bottom #}
                         {% for message in messages %}
                             <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
                         {% endfor %}
                     </ul>
                 {% endif %}
 
-                <form method="POST" class="form-styles">
-                    {% csrf_token %} {# <--- ADD THIS LINE HERE! #}
+                <form method="POST" class="form-styles space-y-6"> {# Added Tailwind space-y for vertical spacing #}
+                    {% csrf_token %}
 
                     {# Render username field #}
-                    <div>
+                    <div class="form-group"> {# Added a class for potential styling #}
                         <label for="{{ form.username.id_for_label }}" class="label-styles">Username*</label>
                         {{ form.username }}
                         {% if form.username.errors %}
@@ -41,7 +60,7 @@
                     </div>
 
                     {# Render password field #}
-                    <div>
+                    <div class="form-group"> {# Added a class for potential styling #}
                         <label for="{{ form.password.id_for_label }}" class="label-styles">Password*</label>
                         {{ form.password }}
                         {% if form.password.errors %}
@@ -62,23 +81,25 @@
                         </ul>
                     {% endif %}
 
-                    <div class="remember-forgot">
-                        <label class="remember-me-label">
-                            <input type="checkbox" class="checkbox-styles"> Remember me
+                    <div class="remember-forgot flex justify-between items-center mt-4"> {# Added Tailwind flex for layout #}
+                        <label class="remember-me-label text-sm text-gray-600"> {# Added Tailwind classes #}
+                            <input type="checkbox" class="checkbox-styles mr-2"> Remember me
                         </label>
-                        <a href="#" class="forgot-password-link">Forgot password?</a>
+                        {# Link to Django's built-in password reset form #}
+                        <a href="{% url 'password_reset' %}" class="forgot-password-link text-blue-600 hover:text-blue-800 text-sm">Forgot password?</a> {# <--- CRITICAL CHANGE #}
                     </div>
 
-                    <button type="submit" class="login-btn">Login</button>
+                    <button type="submit" class="login-btn btn-primary w-full">Login</button> {# Added Tailwind btn-primary and w-full #}
 
-                    <p class="register-text">
-                        Not registered yet? <a href="{% url 'register' %}" class="register-link">Create a new account</a>
+                    <p class="register-text text-center text-sm text-gray-600 mt-4"> {# Added Tailwind classes #}
+                        Not registered yet? <a href="{% url 'users:register' %}" class="register-link text-blue-600 hover:text-blue-800">Create a new account</a> {# <--- CRITICAL CHANGE #}
                     </p>
                 </form>
             </div>
 
-            <div class="login-image">
+            <div class="login-image hidden md:block w-1/2 bg-gray-200 rounded-lg"> {# Added Tailwind classes for responsiveness #}
                 <!-- Image goes here -->
+                <img src="https://placehold.co/400x600/E0F2F7/000?text=Login+Image" alt="Login Illustration" class="w-full h-full object-cover rounded-lg">
             </div>
         </div>
     </div>
