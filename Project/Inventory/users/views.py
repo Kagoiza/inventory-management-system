@@ -44,7 +44,7 @@ def login_view(request):
             if user is not None:
                 auth_login(request, user) # Log the user in
                 messages.info(request, f'You are now logged in as {username}.')
-                return redirect('home') # Redirect to the home page
+                return redirect('requestor_dashboard') # Redirect to the home page
             else:
                 messages.error(request, 'Invalid username or password.')
         else:
@@ -72,7 +72,6 @@ def home(request):
     return render(request, 'users/home.html')
 
 # --- Basic Requestor Dashboard View ---
-@login_required
 
 @login_required
 def requestor_dashboard(request):
