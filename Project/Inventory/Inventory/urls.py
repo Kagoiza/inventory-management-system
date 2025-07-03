@@ -31,6 +31,9 @@ urlpatterns = [
     # Correcting the home view reference to use user_views
     path('home/', user_views.home, name='home'),
     path('', user_views.requestor_dashboard, name='requestor_dashboard'),
+    # urls.py
+    path('store_clerk_dashboard/', user_views.store_clerk_dashboard, name='store-clerk-dashboard'),
+
 ]
 
 # ONLY for development: Serve static files

@@ -6,6 +6,7 @@ from django.contrib.auth.forms import AuthenticationForm # Django'is built-in lo
 from .forms import CustomUserCreationForm # Your custom registraton form
 from django.shortcuts import render
 from .models import ItemRequest
+from .models import InventoryItem
 
 # --- Registration View ---
 def register(request):
@@ -88,3 +89,16 @@ def requestor_dashboard(request):
         'approved_count': approved_count,
         'pending_count': pending_count,
     })
+
+
+@login_required
+def store_clerk_dashboard(request):
+    items = InventoryItem.objects.all()
+
+    context = {
+        'items': items,
+        'total_items': items.count(),
+        'items_issued': sum(item.quantity_issued for item in items),
+        'items_returned': sum(item.quantity_returned for item in items),
+    }
+    return render(request, 'users/store_clerk_dashboard.html', context)
