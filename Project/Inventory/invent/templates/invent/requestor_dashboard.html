@@ -1,0 +1,168 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Requestor Dashboard</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+ <link href="{% static 'users/css/requestor_dashboard.css' %}" rel="stylesheet" />
+</head>
+<body class="bg-light">
+<div class="d-flex">
+  <!-- Sidebar -->
+  <div class="sidebar vh-100 p-3" style="width: 250px; position: fixed;">
+    <div class="text-center mb-4">
+      <h6 class="fw-bold mb-1">{{ user.first_name|default:user.username }}</h6>
+    </div>
+    <ul class="nav flex-column">
+      <li class="nav-item mb-2">
+        <a class="nav-link" href="{% url 'request_item' %}">
+          <i class="fas fa-fw fa-plus-circle"></i> Request Item
+        </a>
+      </li>
+      <li class="nav-item mb-2">
+        <a class="nav-link active" href="#">
+          <i class="fas fa-fw fa-chart-bar"></i> Request Summary
+        </a>
+      </li>
+      <li class="nav-item mt-4">
+        <a class="nav-link text-white-50" href="{% url 'logout' %}">
+          <i class="fas fa-right-from-bracket"></i> Logout
+        </a>
+      </li>
+    </ul>
+    <div class="mt-auto text-center pt-3">
+      <hr class="border-light opacity-25" />
+      <small class="text-white-50">ICT Authority</small>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content flex-grow-1" style="margin-left: 250px;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="greeting">Hello {{ user.first_name|default:user.username }}!</h2>
+      <form class="d-flex" role="search">
+        <input class="form-control search-box" type="search" placeholder="Search for items..." aria-label="Search" />
+        <button class="btn search-btn ms-2" type="submit">
+          <i class="fas fa-search"></i>
+        </button>
+      </form>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="row mb-4 g-4">
+      <div class="col-md-4">
+        <div class="card summary-card border-left-primary h-100">
+          <div class="card-body">
+            <div class="row align-items-center">
+              <div class="col">
+                <h6 class="text-uppercase text-primary mb-2">Total Requests</h6>
+                <h2 class="mb-0">{{ total_requests }}</h2>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-clipboard-list fa-2x text-primary card-icon"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card summary-card border-left-success h-100">
+          <div class="card-body">
+            <div class="row align-items-center">
+              <div class="col">
+                <h6 class="text-uppercase text-success mb-2">Approved</h6>
+                <h2 class="mb-0">{{ approved_count }}</h2>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-check-circle fa-2x text-success card-icon"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="card summary-card border-left-warning h-100">
+          <div class="card-body">
+            <div class="row align-items-center">
+              <div class="col">
+                <h6 class="text-uppercase text-warning mb-2">Pending</h6>
+                <h2 class="mb-0">{{ pending_count }}</h2>
+              </div>
+              <div class="col-auto">
+                <i class="fas fa-clock fa-2x text-warning card-icon"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Request Table -->
+    <div class="card data-table">
+      <div class="card-header py-3 d-flex justify-content-between align-items-center">
+        <h6 class="m-0 font-weight-bold text-primary">Recent Requests</h6>
+        <button class="btn btn-sm btn-primary">
+          <i class="fas fa-download fa-sm"></i> Export
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Request ID</th>
+                <th>Item Type</th>
+                <th>Status</th>
+                <th>Request Date</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for req in requests %}
+              <tr>
+                <td>#{{ req.id }}</td>
+                <td>{{ req.item.name }}</td>
+                <td>
+                  {% if req.status == "Approved" %}
+                    <span class="badge bg-success">Approved</span>
+                  {% elif req.status == "Denied" %}
+                    <span class="badge bg-danger">Denied</span>
+                  {% elif req.status == "Pending" %}
+                    <span class="badge bg-warning text-dark">Pending</span>
+                  {% else %}
+                    <span class="badge bg-info text-dark">{{ req.status }}</span>
+                  {% endif %}
+                </td>
+                <td>{{ req.date_requested|date:"M d, Y" }}</td>
+                <td>
+                  <button class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-eye"></i> View
+                  </button>
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="5" class="text-center text-muted py-4">
+                  <i class="fas fa-inbox fa-2x mb-3"></i>
+                  <p>No requests submitted yet.</p>
+                  <a href="{% url 'request_item' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Make Your First Request
+                  </a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+</body>
+</html>
