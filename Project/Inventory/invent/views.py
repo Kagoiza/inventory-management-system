@@ -1,12 +1,19 @@
+# C:\Users\Bumi\OneDrive\Documents\Projects\inventory-management-system\Project\Inventory\invent\views.py
 
-from django.shortcuts import render, redirect
-from django.contrib.auth.forms import  AuthenticationForm
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.forms import AuthenticationForm
 from .forms import CustomCreationForm
 from django.contrib.auth import login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
-from .models import ItemRequest, InventoryItem, Item
-from .forms import ManageStockForm
+from django.db.models import Sum, F # <-- IMPORTANT: Added F for atomic updates
+from django.db import transaction # <-- IMPORTANT: Added transaction for atomic operations
+
+# Correct Model and Form Imports
+from .models import ItemRequest, InventoryItem, Item, StockTransaction # <-- IMPORTANT: Added StockTransaction
+from .forms import RequestItemForm
+from .forms import InventoryItemForm
+from .forms import IssueItemForm, AdjustStockForm # <-- IMPORTANT: Added new forms
 
 def register(request):
     if request.method == 'POST':
@@ -38,9 +45,9 @@ def custom_login(request):
         form = AuthenticationForm()
     return render(request, 'invent/login.html', {'form': form})
 
-
 def logout_view(request):
     logout(request)
+    messages.info(request, "You have been logged out.")
     return redirect('login')
 
 
@@ -48,7 +55,6 @@ def logout_view(request):
 def requestor_dashboard(request):
     user_requests = ItemRequest.objects.filter(requestor=request.user)
 
-    # Count status totals
     total_requests = user_requests.count()
     approved_count = user_requests.filter(status='Approved').count()
     pending_count = user_requests.filter(status='Pending').count()
@@ -60,8 +66,6 @@ def requestor_dashboard(request):
         'pending_count': pending_count,
     })
 
-from .forms import RequestItemForm
-
 @login_required
 def request_item(request):
     if request.method == 'POST':
@@ -70,36 +74,174 @@ def request_item(request):
             item_request = form.save(commit=False)
             item_request.requestor = request.user
             item_request.save()
+            messages.success(request, "Item request submitted successfully!")
             return redirect('requestor_dashboard')
     else:
         form = RequestItemForm()
     return render(request, 'invent/request_item.html', {'form': form})
 
 
+# --- Store Clerk Functionality ---
+
 @login_required
+@permission_required('invent.view_inventoryitem', raise_exception=True)
 def store_clerk_dashboard(request):
-    items = InventoryItem.objects.all()
+    inventory_items = InventoryItem.objects.all()
+    
+    # Calculate totals from InventoryItem instances
+    # Use sum on the `quantity_total` field across all inventory items
+    total_inventory_items = inventory_items.aggregate(total_sum=Sum('quantity_total'))['total_sum'] or 0
+    items_issued = inventory_items.aggregate(total_issued=Sum('quantity_issued'))['total_issued'] or 0
+    items_returned = inventory_items.aggregate(total_returned=Sum('quantity_returned'))['total_returned'] or 0
+
+    items_for_dashboard = inventory_items.order_by('-created_at')[:5]
 
     context = {
-        'items': items,
-        'total_items': items.count(),
-        'items_issued': sum(item.quantity_issued for item in items),
-        'items_returned': sum(item.quantity_returned for item in items),
+        'total_items': total_inventory_items, # Renamed variable for clarity
+        'items_issued': items_issued,
+        'items_returned': items_returned,
+        'items': items_for_dashboard,
     }
     return render(request, 'invent/store_clerk_dashboard.html', context)
 
 
 @login_required
+@permission_required('invent.view_inventoryitem', raise_exception=True)
 def manage_stock(request):
     if request.method == 'POST':
-        form = ManageStockForm(request.POST)
+        form = InventoryItemForm(request.POST)
         if form.is_valid():
-            form.save()
-            messages.success(request, 'Stock item added or updated successfully.')
+            new_item = form.save(commit=False)
+            new_item.created_by = request.user
+            new_item.save()
+            messages.success(request, f'Inventory item "{new_item.name}" added successfully.')
             return redirect('manage_stock')
+        else:
+            messages.error(request, "Error adding item. Please check the form.")
     else:
-        form = ManageStockForm()
+        form = InventoryItemForm()
 
-    items = Item.objects.all()
-    return render(request, 'invent/manage_stock.html', {'form': form, 'items': items})
+    items = InventoryItem.objects.all().order_by('name')
+    
+    context = {
+        'form': form,
+        'items': items,
+    }
+    return render(request, 'invent/manage_stock.html', context)
 
+
+@login_required
+@permission_required('invent.change_inventoryitem', raise_exception=True)
+def edit_item(request, item_id):
+    item = get_object_or_404(InventoryItem, id=item_id)
+    if request.method == 'POST':
+        form = InventoryItemForm(request.POST, instance=item)
+        if form.is_valid():
+            if not item.created_by:
+                item.created_by = request.user
+            form.save()
+            messages.success(request, f'Inventory Item "{item.name}" updated successfully!')
+            return redirect('manage_stock')
+        else:
+            messages.error(request, "Error updating item. Please correct the errors below.")
+    else:
+        form = InventoryItemForm(instance=item)
+    
+    context = {
+        'form': form,
+        'item': item,
+    }
+    return render(request, 'invent/edit_item.html', context)
+
+
+# --- FULLY IMPLEMENTED VIEWS for Issue Item and Adjust Stock ---
+
+@login_required
+@permission_required('invent.can_issue_item', raise_exception=True) # Using custom permission 'can_issue_item'
+def issue_item(request):
+    if request.method == 'POST':
+        form = IssueItemForm(request.POST)
+        if form.is_valid():
+            item = form.cleaned_data['item']
+            quantity = form.cleaned_data['quantity']
+            issued_to = form.cleaned_data['issued_to']
+            notes = form.cleaned_data['notes']
+
+            try:
+                with transaction.atomic(): # Ensures all updates succeed or fail together
+                    # Update InventoryItem quantities atomically
+                    # quantity_issued increases
+                    item.quantity_issued = F('quantity_issued') + quantity
+                    # quantity_total should not change here if it represents all items ever physically received.
+                    # It changes only for adjustments/receipts.
+                    # The `quantity_remaining` property on the model calculates available stock.
+                    item.save(update_fields=['quantity_issued'])
+
+                    # Create a StockTransaction record
+                    StockTransaction.objects.create(
+                        item=item,
+                        transaction_type='Issue',
+                        quantity=-quantity, # Negative to denote items removed from available stock
+                        issued_to=issued_to,
+                        reason=f"Issued to {issued_to}. " + notes, # Combine notes with recipient for reason
+                        recorded_by=request.user
+                    )
+                messages.success(request, f'{quantity} x {item.name} successfully issued to {issued_to}.')
+                return redirect('store_clerk_dashboard') # Redirect after successful operation
+            except Exception as e:
+                messages.error(request, f"Error issuing item: {e}")
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = IssueItemForm()
+
+    context = {
+        'form': form,
+    }
+    return render(request, 'invent/issue_item.html', context)
+
+
+@login_required
+@permission_required('invent.can_adjust_stock', raise_exception=True) # Using custom permission 'can_adjust_stock'
+def adjust_stock(request):
+    if request.method == 'POST':
+        form = AdjustStockForm(request.POST)
+        if form.is_valid():
+            item = form.cleaned_data['item']
+            adjustment_quantity = form.cleaned_data['adjustment_quantity']
+            reason = form.cleaned_data['reason']
+            notes = form.cleaned_data['notes']
+
+            try:
+                with transaction.atomic(): # Ensures all updates succeed or fail together
+                    # Update InventoryItem total quantity atomically
+                    item.quantity_total = F('quantity_total') + adjustment_quantity
+                    # Ensure quantity_total doesn't become negative after adjustment
+                    if (item.quantity_total + adjustment_quantity) < 0: # This check is redundant with form validation, but good for safety
+                         raise ValueError("Adjustment would result in negative total stock.")
+                    item.save(update_fields=['quantity_total'])
+
+                    # Create a StockTransaction record
+                    StockTransaction.objects.create(
+                        item=item,
+                        transaction_type='Adjustment',
+                        quantity=adjustment_quantity, # Quantity can be positive or negative
+                        reason=reason,
+                        notes=notes, # Store notes separately if you want, or combine with reason
+                        recorded_by=request.user
+                    )
+                
+                action_msg = "added to" if adjustment_quantity > 0 else "removed from"
+                messages.success(request, f'{abs(adjustment_quantity)} x {item.name} {action_msg} stock. Reason: {reason}.')
+                return redirect('store_clerk_dashboard') # Redirect after successful operation
+            except Exception as e:
+                messages.error(request, f"Error adjusting stock: {e}")
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = AdjustStockForm()
+
+    context = {
+        'form': form,
+    }
+    return render(request, 'invent/adjust_stock.html', context)

@@ -27,7 +27,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
-
+SITE_ID = 1
 # Application definition
 
 INSTALLED_APPS = [
@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sites',
 ]
 
 MIDDLEWARE = [
@@ -121,6 +122,21 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Email Configuration for Password Reset
+# For development: Prints emails to the console
+#EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+
+# For production/real email sending, uncomment and configure these:
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com' # <-- REPLACE with your email provider's SMTP host (e.g., 'smtp.gmail.com')
+EMAIL_PORT = 587 # <-- REPLACE if your provider uses a different port (e.g., 465 for SSL)
+EMAIL_USE_TLS = True # <-- Set to True or False based on your provider (or EMAIL_USE_SSL = True)
+EMAIL_HOST_USER = 'rbumija28@gmail.com' # <-- REPLACE with your actual email address
+EMAIL_HOST_PASSWORD = 'mocf wlro rwrv dnye' # <-- REPLACE with your actual email password or an App Password
+DEFAULT_FROM_EMAIL = 'rbumija28@gmail.com' # <-- REPLACE with your actual email address (sender)
+
+  
 
 LOGIN_URL = 'login'
 
