@@ -1,18 +1,171 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Manage_Stock</title>
-</head>
-<body>
-    <h2>Manage Stock</h2>
+{% extends 'invent/base_store_clerk.html' %}
+{% load static %}
 
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Save Item</button>
-</form>
+{% block content %}
+<div class="container-fluid mt-4"> {# Use container-fluid for wider layout #}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0 text-primary"><i class="fas fa-boxes me-2"></i> Manage Inventory Stock</h2> {# Added icon and color #}
+        <a href="{% url 'store_clerk_dashboard' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+    </div>
 
-</body>
-</html>
+    {% if messages %}
+        <ul class="messages list-unstyled">
+            {% for message in messages %}
+                <li{% if message.tags %} class="alert alert-{{ message.tags }} alert-dismissible fade show"{% endif %} role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </li>
+            {% endfor %}
+        </ul>
+    {% endif %}
+
+    {# Section for Adding New Item #}
+    <div class="card shadow-sm mb-5"> {# Added shadow-sm and mb-5 for spacing #}
+        <div class="card-header bg-primary text-white py-3"> {# Card header for title #}
+            <h4 class="mb-0"><i class="fas fa-plus-circle me-2"></i> Add New Item</h4>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                {# Render fields manually for finer control over layout #}
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Item Name:</label>
+                        {{ form.name }}
+                        {% if form.name.errors %}<div class="text-danger small">{{ form.name.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.category.id_for_label }}" class="form-label">Category:</label>
+                        {{ form.category }}
+                        {% if form.category.errors %}<div class="text-danger small">{{ form.category.errors }}</div>{% endif %}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.status.id_for_label }}" class="form-label">Status:</label>
+                        {{ form.status }}
+                        {% if form.status.errors %}<div class="text-danger small">{{ form.status.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.expiration_date.id_for_label }}" class="form-label">Expiration Date:</label>
+                        {{ form.expiration_date }}
+                        {% if form.expiration_date.errors %}<div class="text-danger small">{{ form.expiration_date.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <label for="{{ form.quantity_total.id_for_label }}" class="form-label">Total Quantity:</label>
+                        {{ form.quantity_total }}
+                        {% if form.quantity_total.errors %}<div class="text-danger small">{{ form.quantity_total.errors }}</div>{% endif %}
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.quantity_issued.id_for_label }}" class="form-label">Quantity Issued:</label>
+                        {{ form.quantity_issued }}
+                        {% if form.quantity_issued.errors %}<div class="text-danger small">{{ form.quantity_issued.errors }}</div>{% endif %}
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.quantity_returned.id_for_label }}" class="form-label">Quantity Returned:</label>
+                        {{ form.quantity_returned }}
+                        {% if form.quantity_returned.errors %}<div class="text-danger small">{{ form.quantity_returned.errors }}</div>{% endif %}
+                    </div>
+                </div>
+                
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger mt-3">
+                        {% for error in form.non_field_errors %}
+                            {{ error }}
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <button type="submit" class="btn btn-primary mt-3"><i class="fas fa-save me-2"></i> Save Item</button>
+            </form>
+        </div>
+    </div>
+
+    {# Section for Existing Inventory Items #}
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-secondary text-white py-3 d-flex justify-content-between align-items-center">
+            <h4 class="mb-0"><i class="fas fa-list me-2"></i> Existing Inventory Items</h4>
+            <button class="btn btn-light btn-sm"><i class="fas fa-download me-2"></i> Export All</button> {# Placeholder for export #}
+        </div>
+        <div class="card-body">
+            {% if items %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover"> {# Removed shadow-sm from table itself #}
+                    <thead class="table-light"> {# Changed to table-light for lighter header #}
+                        <tr>
+                            <th>ID</th> {# Added ID column #}
+                            <th>Item Name</th>
+                            <th>Category</th>
+                            <th>Status</th>
+                            <th>Expiration Date</th>
+                            <th>Total Qty</th>
+                            <th>Issued Qty</th>
+                            <th>Returned Qty</th>
+                            <th>Available Qty</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td>{{ item.id }}</td> {# Display item ID #}
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.category|default:"N/A" }}</td>
+                            <td>
+                                <span class="badge {% comment %} Determine badge color based on status or remaining quantity {% endcomment %}
+                                    {% if item.is_expired %}bg-dark text-white
+                                    {% elif item.status == 'Approved' or item.status == 'In Stock' %}bg-success
+                                    {% elif item.status == 'Pending' %}bg-info
+                                    {% elif item.status == 'Issued' %}bg-primary
+                                    {% elif item.status == 'Returned' %}bg-secondary
+                                    {% elif item.quantity_remaining <= 5 and item.quantity_remaining > 0 %}bg-warning text-dark
+                                    {% elif item.quantity_remaining <= 0 %}bg-danger
+                                    {% else %}bg-secondary{% endif %}">
+                                    {{ item.status }}
+                                    {% if item.is_expired %}(Expired){% endif %}
+                                </span>
+                            </td>
+                            <td>{{ item.expiration_date|default:"N/A" }}</td>
+                            <td>{{ item.quantity_total }}</td>
+                            <td>{{ item.quantity_issued }}</td>
+                            <td>{{ item.quantity_returned }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if item.quantity_remaining > 0 %}bg-primary
+                                    {% else %}bg-danger{% endif %}">
+                                    {{ item.quantity_remaining }}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="{% url 'edit_item' item.id %}" class="btn btn-sm btn-info me-1" title="Edit Item">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a href="{% url 'adjust_stock' %}" class="btn btn-sm btn-warning me-1" title="Adjust Stock">
+                                    <i class="fas fa-sliders-h"></i>
+                                </a>
+                                <a href="{% url 'issue_item' %}" class="btn btn-sm btn-success" title="Issue Item">
+                                    <i class="fas fa-share-square"></i>
+                                </a>
+                                {# Consider adding a delete button with confirmation #}
+                                {# <a href="{% url 'delete_item' item.id %}" class="btn btn-sm btn-danger" title="Delete Item"><i class="fas fa-trash"></i></a> #}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="alert alert-info text-center py-4" role="alert">
+                <i class="fas fa-info-circle fa-2x mb-3"></i>
+                <p class="mb-0">No inventory items found. Add new items using the form above.</p>
+            </div>
+            {% endif %}
+        </div> {# End card-body #}
+    </div> {# End card #}
+
+</div>
+{% endblock %}
