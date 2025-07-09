@@ -7,8 +7,15 @@ from django.utils import timezone
 
 class Item(models.Model):
     name = models.CharField(max_length=100)
-    description = models.TextField(blank=True)
-    quantity = models.PositiveIntegerField(default=0) # This 'quantity' might be for the abstract 'Item', not inventory stock
+    category = models.CharField(max_length=100, blank=True, null=True, default='')
+    department = models.CharField(max_length=100, blank=True, null=True, default='')
+    quantity = models.PositiveIntegerField()
+    condition = models.CharField(
+        max_length=10,
+        choices=[("Good", "Good"), ("Fair", "Fair"), ("Poor", "Poor")],
+        default="Good"
+    )
+    description = models.TextField(blank=True, null=True, default='')
 
     def __str__(self):
         return self.name

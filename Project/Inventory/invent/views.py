@@ -14,6 +14,8 @@ from .models import ItemRequest, InventoryItem, Item, StockTransaction # <-- IMP
 from .forms import RequestItemForm
 from .forms import InventoryItemForm
 from .forms import IssueItemForm, AdjustStockForm # <-- IMPORTANT: Added new forms
+from django.db.models import Q
+
 
 def register(request):
     if request.method == 'POST':
@@ -245,3 +247,27 @@ def adjust_stock(request):
         'form': form,
     }
     return render(request, 'invent/adjust_stock.html', context)
+
+@login_required
+def search_items(request):
+    query = request.GET.get('q', '')
+    condition_filter = request.GET.get('condition', '')
+
+    items = Item.objects.all()
+
+    if query:
+        items = items.filter(
+            Q(name__icontains=query) |
+            Q(category__icontains=query) |
+            Q(department__icontains=query)
+        )
+
+    if condition_filter:
+        items = items.filter(condition=condition_filter)
+
+    context = {
+        'items': items,
+        'query': query,
+        'condition_filter': condition_filter
+    }
+    return render(request, 'invent/search_items.html', context)
