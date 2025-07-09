@@ -1,0 +1,54 @@
+<h2 class="text-2xl font-semibold mb-4">Request Summary</h2>
+
+{% if messages %}
+  {% for message in messages %}
+    <div class="mb-4 p-3 rounded text-white {% if message.tags == 'success' %}bg-green-500{% else %}bg-red-500{% endif %}">
+      {{ message }}
+    </div>
+  {% endfor %}
+{% endif %}
+
+<table class="min-w-full bg-white border rounded shadow">
+  <thead class="bg-gray-100">
+    <tr>
+      <th class="py-2 px-4">Item</th>
+      <th class="py-2 px-4">Quantity</th>
+      <th class="py-2 px-4">Status</th>
+      <th class="py-2 px-4">Date</th>
+      <th class="py-2 px-4">Action</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for req in requests %}
+    <tr class="border-t">
+      <td class="py-2 px-4">{{ req.item.name }}</td>
+      <td class="py-2 px-4">{{ req.quantity }}</td>
+      <td class="py-2 px-4">
+        <span class="px-2 py-1 rounded text-white
+          {% if req.status == 'Approved' %}bg-green-500
+          {% elif req.status == 'Pending' %}bg-yellow-500
+          {% elif req.status == 'Cancelled' %}bg-gray-500
+          {% else %}bg-red-500{% endif %}">
+          {{ req.status }}
+        </span>
+      </td>
+      <td class="py-2 px-4">{{ req.date_requested|date:"M d, Y" }}</td>
+      <td class="py-2 px-4">
+        {% if req.status == "Pending" %}
+          <a href="{% url 'cancel_request' req.id %}"
+             class="text-red-600 hover:underline"
+             onclick="return confirm('Are you sure you want to cancel this request?');">
+            Cancel
+          </a>
+        {% else %}
+          —
+        {% endif %}
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="5" class="text-center py-4 text-gray-500">You haven't made any requests yet.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

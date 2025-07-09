@@ -33,6 +33,7 @@ class ItemRequest(models.Model):
         ('Pending', 'Pending'),
         ('Approved', 'Approved'),
         ('Rejected', 'Rejected'),
+        ('Cancelled', 'Cancelled'),
     ], default='Pending')
 
     date_requested = models.DateTimeField(auto_now_add=True)

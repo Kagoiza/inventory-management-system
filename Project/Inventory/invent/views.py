@@ -103,6 +103,32 @@ def request_item(request):
         'item': item
     })
 
+# --- Request Summary ---
+@login_required
+def request_summary(request):
+    requests = ItemRequest.objects.filter(requestor=request.user).order_by('-date_requested')
+    return render(request, 'invent/request_summary.html', {'requests': requests})
+
+# --- Cancel Request ---
+
+@login_required
+def cancel_request(request, request_id):
+    item_request = get_object_or_404(ItemRequest, id=request_id, requestor=request.user)
+
+    if item_request.status == 'Pending':
+        item_request.status = 'Cancelled'
+        item_request.save()
+
+        # Optionally restore stock
+        item_request.item.quantity += item_request.quantity
+        item_request.item.save()
+
+        messages.success(request, "Your request was cancelled and stock restored.")
+    else:
+        messages.warning(request, "You can only cancel pending requests.")
+
+    return redirect('request_summary')  # or 'my_requests'
+
 
 # --- Store Clerk Functionality ---
 
