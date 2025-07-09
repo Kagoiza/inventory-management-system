@@ -9,6 +9,7 @@ urlpatterns = [
     # Requestor Paths
     path('', views.requestor_dashboard, name='requestor_dashboard'),
     path('request_item/', views.request_item, name='request_item'),
+    path('search-items/', views.search_items, name='search_items'),
 
     # Store Clerk Paths
     path('store_clerk_dashboard/', views.store_clerk_dashboard, name ='store_clerk_dashboard'),
