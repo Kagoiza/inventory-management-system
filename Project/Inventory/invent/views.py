@@ -11,7 +11,7 @@ from django.db import transaction # <-- IMPORTANT: Added transaction for atomic 
 
 # Correct Model and Form Imports
 from .models import ItemRequest, InventoryItem, Item, StockTransaction # <-- IMPORTANT: Added StockTransaction
-from .forms import RequestItemForm
+from .forms import ItemRequestForm
 from .forms import InventoryItemForm
 from .forms import IssueItemForm, AdjustStockForm # <-- IMPORTANT: Added new forms
 from django.db.models import Q
@@ -68,19 +68,40 @@ def requestor_dashboard(request):
         'pending_count': pending_count,
     })
 
+# --- Request Item Funcntionality
+
 @login_required
 def request_item(request):
+    item_id = request.GET.get('item_id')
+    item = get_object_or_404(Item, id=item_id)
+
     if request.method == 'POST':
-        form = RequestItemForm(request.POST)
+        form = ItemRequestForm(request.POST)
         if form.is_valid():
-            item_request = form.save(commit=False)
-            item_request.requestor = request.user
-            item_request.save()
-            messages.success(request, "Item request submitted successfully!")
-            return redirect('requestor_dashboard')
+            request_obj = form.save(commit=False)
+
+            request_obj.item = item
+            request_obj.requestor = request.user  # ✅ Make sure this line is present
+
+            print("DEBUG - User making request:", request.user)
+            print("DEBUG - Requestor set as:", request_obj.requestor)
+
+            if item.quantity >= request_obj.quantity:
+                request_obj.status = "Pending"
+                request_obj.save()
+                messages.success(request, "Your request has been submitted successfully.")
+                return redirect('requestor_dashboard')
+            else:
+                messages.warning(request, "Not enough stock available. Please reduce the quantity.")
+        else:
+            print("DEBUG - Form errors:", form.errors)
     else:
-        form = RequestItemForm()
-    return render(request, 'invent/request_item.html', {'form': form})
+        form = ItemRequestForm()
+
+    return render(request, 'invent/request_item.html', {
+        'form': form,
+        'item': item
+    })
 
 
 # --- Store Clerk Functionality ---
@@ -247,6 +268,8 @@ def adjust_stock(request):
         'form': form,
     }
     return render(request, 'invent/adjust_stock.html', context)
+
+# --- Search Items Functionality
 
 @login_required
 def search_items(request):

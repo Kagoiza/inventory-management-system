@@ -12,18 +12,16 @@ class CustomCreationForm(UserCreationForm):
         fields = ['username', 'email', 'password1', 'password2']
 
 
-class RequestItemForm(forms.ModelForm):
+class ItemRequestForm(forms.ModelForm):
     class Meta:
         model = ItemRequest
-        fields = ['item', 'type']
+        fields = ['quantity', 'reason']
         widgets = {
-            'item': forms.Select(attrs={'class': 'form-control'}),
-            'type': forms.TextInput(attrs={'class': 'form-control'}),
+            'reason': forms.Textarea(attrs={'rows': 2, 'class': 'form-control'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
         }
-        labels = {
-            'item': 'Item ID',
-            'type': 'Type',
-        }
+
+
 
 class InventoryItemForm(forms.ModelForm):
     class Meta:

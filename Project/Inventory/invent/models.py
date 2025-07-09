@@ -22,20 +22,23 @@ class Item(models.Model):
 
 class ItemRequest(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE) 
-    type = models.CharField(max_length=100) 
-    application_date = models.DateField(default=timezone.now) 
+    name = models.CharField(max_length=100)  
+    quantity = models.PositiveIntegerField(default=1) 
+    reason = models.TextField(blank=True, null=True)  
 
+    application_date = models.DateField(default=timezone.now)
     requestor = models.ForeignKey(User, on_delete=models.CASCADE)
+
     status = models.CharField(max_length=10, choices=[
         ('Pending', 'Pending'),
         ('Approved', 'Approved'),
         ('Rejected', 'Rejected'),
-        # Consider adding 'Issued' status here if a request can be marked as fulfilled
     ], default='Pending')
+
     date_requested = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.item.name} by {self.requestor.username}"
+        return f"Request for {self.item.name} by {self.requestor.username}"
     
 
 class InventoryItem(models.Model):
