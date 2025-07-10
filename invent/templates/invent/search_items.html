@@ -1,0 +1,35 @@
+<h2 class="text-2xl font-semibold mb-4">Available Items</h2>
+
+<table class="min-w-full bg-white border rounded shadow">
+  <thead class="bg-gray-100">
+    <tr>
+      <th class="py-2 px-4">Name</th>
+      <th class="py-2 px-4">Category</th>
+      <th class="py-2 px-4">Department</th>
+      <th class="py-2 px-4">Condition</th>
+      <th class="py-2 px-4">Quantity</th>
+      <th class="py-2 px-4">Action</th> 
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in items %}
+    <tr class="border-t">
+      <td class="py-2 px-4">{{ item.name }}</td>
+      <td class="py-2 px-4">{{ item.category }}</td>
+      <td class="py-2 px-4">{{ item.department }}</td>
+      <td class="py-2 px-4">{{ item.condition }}</td>
+      <td class="py-2 px-4">{{ item.quantity }}</td>
+      <td class="py-2 px-4">
+        <a href="{% url 'request_item' %}?item_id={{ item.id }}"
+           class="bg-green-600 text-white px-3 py-1 rounded hover:bg-green-700">
+          Request
+        </a>
+      </td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="6" class="py-4 text-center text-gray-500">No items found.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

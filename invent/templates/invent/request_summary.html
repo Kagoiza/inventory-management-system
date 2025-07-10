@@ -1,0 +1,82 @@
+{% extends 'invent/base.html' %}
+
+{% block title %}Request Summary{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>Your Item Request Summary</h2>
+    <a href="{% url 'requestor_dashboard' %}" class="btn btn-secondary mb-3">Back to Dashboard</a>
+
+    <div class="row">
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-primary">
+                <div class="card-body">
+                    <h5 class="card-title">Total Requests</h5>
+                    <p class="card-text fs-3">{{ total_requests }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-warning">
+                <div class="card-body">
+                    <h5 class="card-title">Pending Requests</h5>
+                    <p class="card-text fs-3">{{ pending_requests }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-success">
+                <div class="card-body">
+                    <h5 class="card-title">Approved Requests</h5>
+                    <p class="card-text fs-3">{{ approved_requests }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-info">
+                <div class="card-body">
+                    <h5 class="card-title">Issued Requests</h5>
+                    <p class="card-text fs-3">{{ issued_requests }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 mb-3">
+            <div class="card text-white bg-danger">
+                <div class="card-body">
+                    <h5 class="card-title">Rejected Requests</h5>
+                    <p class="card-text fs-3">{{ rejected_requests }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <h3>Your Requests by Status</h3>
+            <ul class="list-group">
+                {% for status_data in requests_by_status %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ status_data.status }}
+                        <span class="badge bg-secondary rounded-pill">{{ status_data.count }}</span>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item">No request status data available.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="col-md-6">
+            <h3>Your Top Requested Items</h3>
+            <ul class="list-group">
+                {% for item_data in requests_by_item %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center">
+                        {{ item_data.item__name }}
+                        <span class="badge bg-secondary rounded-pill">{{ item_data.count }}</span>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item">No item request data available.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
