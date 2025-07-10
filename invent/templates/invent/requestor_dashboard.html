@@ -110,7 +110,6 @@
                 <th>Item Type</th>
                 <th>Status</th>
                 <th>Request Date</th>
-                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -130,11 +129,6 @@
                   {% endif %}
                 </td>
                 <td>{{ req.date_requested|date:"M d, Y" }}</td>
-                <td>
-                  <button class="btn btn-sm btn-outline-primary">
-                    <i class="fas fa-eye"></i> View
-                  </button>
-                </td>
               </tr>
               {% empty %}
               <tr>
