@@ -8,6 +8,8 @@ from django.db.models import Sum, F, Count, Q
 from django.db import transaction
 from django.http import HttpResponse # Keep HttpResponse for other potential uses, or remove if truly not needed elsewhere
 from django.utils import timezone
+import json
+from django.utils.safestring import mark_safe
 
 # Correct Model and Form Imports
 from .models import ItemRequest, InventoryItem, StockTransaction # Removed 'Item' if it's not actually used
@@ -74,25 +76,27 @@ def requestor_dashboard(request):
 
 @login_required
 def request_item(request):
-    # This line is CRUCIAL and must be at the beginning of the function
-    # It ensures 'available_inventory' is always defined for both GET and POST requests.
-    available_inventory_queryset_for_form = InventoryItem.objects.filter(
-        # Use F() expression or .annotate() if quantity_remaining is a computed property
-        # For simplicity, if quantity_remaining() is a method, you iterate as before.
-        # If quantity_remaining is a property on the model, filter directly
-    ).order_by('name')
+    item_id_from_get = request.GET.get('item')
 
-    # This is for the Python-side filtering for quantity_remaining() and for the JS
-    available_inventory_list_for_js = [item for item in available_inventory_queryset_for_form if item.quantity_remaining() > 0]
-    
-    # Extract IDs of available items to create a queryset for the form field
-    available_item_ids_for_form = [item.id for item in available_inventory_list_for_js]
-    filtered_inventory_queryset_for_form = InventoryItem.objects.filter(id__in=available_item_ids_for_form).order_by('name')
+    available_inventory_queryset = InventoryItem.objects.all().order_by('name')
+    available_inventory_list = [item for item in available_inventory_queryset if item.quantity_remaining() > 0]
 
+    available_item_ids = [item.id for item in available_inventory_list]
+    filtered_inventory_queryset = InventoryItem.objects.filter(id__in=available_item_ids).order_by('name')
+
+    # Prepare JSON for JS use
+    available_inventory_json = mark_safe(json.dumps([
+        {
+            "id": item.id,
+            "quantity_remaining": item.quantity_remaining(),
+            "condition": item.condition or "N/A"
+        }
+        for item in available_inventory_list
+    ]))
 
     if request.method == 'POST':
         form = ItemRequestForm(request.POST)
-        form.fields['item'].queryset = filtered_inventory_queryset_for_form
+        form.fields['item'].queryset = filtered_inventory_queryset
 
         if form.is_valid():
             item_request = form.save(commit=False)
@@ -102,19 +106,21 @@ def request_item(request):
             return redirect('requestor_dashboard')
         else:
             messages.error(request, "Please correct the errors below.")
-            # Pass available_inventory_list_for_js to the template for the JS to use
-            return render(request, 'invent/request_item.html', {
-                'form': form,
-                'available_inventory': available_inventory_list_for_js # For JavaScript
-            })
-    else: # Handles the initial GET request
+    else:
         form = ItemRequestForm()
-        form.fields['item'].queryset = filtered_inventory_queryset_for_form
+        form.fields['item'].queryset = filtered_inventory_queryset
 
-    # Pass the form and available_inventory_list_for_js to the template
+        # Pre-select item if passed via GET
+        if item_id_from_get:
+            try:
+                form.fields['item'].initial = int(item_id_from_get)
+            except ValueError:
+                pass  # ignore invalid ID
+
     return render(request, 'invent/request_item.html', {
         'form': form,
-        'available_inventory': available_inventory_list_for_js # For JavaScript
+        'available_inventory': available_inventory_list,
+        'available_inventory_json': available_inventory_json,
     })
 
 @login_required
@@ -339,7 +345,7 @@ def search_items(request):
         'query': query,
         'results': results,
     }
-    return render(request, 'invent/search_results.html', context)
+    return render(request, 'invent/search_items.html', context)
 
 
 @login_required
