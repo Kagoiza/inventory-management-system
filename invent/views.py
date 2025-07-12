@@ -84,7 +84,7 @@ def request_item(request):
     available_item_ids = [item.id for item in available_inventory_list]
     filtered_inventory_queryset = InventoryItem.objects.filter(id__in=available_item_ids).order_by('name')
 
-    # Prepare JSON for JS use
+    # JS-safe JSON data for showing item quantity/condition
     available_inventory_json = mark_safe(json.dumps([
         {
             "id": item.id,
@@ -107,15 +107,18 @@ def request_item(request):
         else:
             messages.error(request, "Please correct the errors below.")
     else:
-        form = ItemRequestForm()
-        form.fields['item'].queryset = filtered_inventory_queryset
-
-        # Pre-select item if passed via GET
-        if item_id_from_get:
+        # Prepare initial data for form
+        initial_data = {}
+        if item_id_from_get and item_id_from_get.isdigit():
             try:
-                form.fields['item'].initial = int(item_id_from_get)
-            except ValueError:
-                pass  # ignore invalid ID
+                item = InventoryItem.objects.get(id=int(item_id_from_get))
+                if item.id in available_item_ids:
+                    initial_data['item'] = item.id
+            except InventoryItem.DoesNotExist:
+                pass
+
+        form = ItemRequestForm(initial=initial_data)
+        form.fields['item'].queryset = filtered_inventory_queryset
 
     return render(request, 'invent/request_item.html', {
         'form': form,
