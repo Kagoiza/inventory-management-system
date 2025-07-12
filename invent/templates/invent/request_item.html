@@ -55,51 +55,40 @@
                 {% endif %}
             </div>
 
-            <button type="submit" class="btn btn-primary">Submit Request</button>
+            <button type="submit" class="btn btn-success">Submit Request</button>
         </form>
     </div>
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const itemSelect = document.getElementById('{{ form.item.id_for_label }}');
         const availableQtySpan = document.getElementById('available_qty');
         const itemConditionSpan = document.getElementById('item_condition');
         const quantityInput = document.getElementById('{{ form.quantity.id_for_label }}');
 
-        // IMPORTANT: Since you are letting Django render the form.item,
-        // the `data-quantity` and `data-condition` attributes will NOT be automatically present
-        // on the <option> tags. We pass `available_inventory` to the template
-        // from the view *specifically for the JS* to read from.
-        
-        const itemDetails = {};
-        {% for item in available_inventory %}
-            itemDetails["{{ item.id }}"] = {
-                quantity_remaining: {{ item.quantity_remaining }},
-                condition: "{{ item.condition|default:'N/A' }}" // Use .default:'N/A' if condition can be None/empty
-            };
-        {% endfor %}
+        const itemDetails = JSON.parse('{{ available_inventory_json|escapejs }}');
 
         function updateItemInfo() {
             const selectedItemId = itemSelect.value;
-            if (selectedItemId && itemDetails[selectedItemId]) {
-                const details = itemDetails[selectedItemId];
+            const details = itemDetails.find(item => item.id == selectedItemId);
+
+            if (details) {
                 availableQtySpan.textContent = details.quantity_remaining;
                 itemConditionSpan.textContent = details.condition;
-                quantityInput.max = details.quantity_remaining; // Set max for client-side validation
+                quantityInput.max = details.quantity_remaining;
             } else {
                 availableQtySpan.textContent = '--';
                 itemConditionSpan.textContent = '--';
-                quantityInput.max = ''; // Remove max if no item selected or invalid
-                quantityInput.value = ''; // Clear quantity if no item selected
+                quantityInput.max = '';
+                quantityInput.value = '';
             }
         }
 
         itemSelect.addEventListener('change', updateItemInfo);
-
-        // Initial update if an item is pre-selected (e.g., after form submission with errors)
-        // or on page load if default value exists
-        updateItemInfo();
+        updateItemInfo(); // Run on load
     });
+</script>
+
 </script>
 {% endblock main_content %}
