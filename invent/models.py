@@ -57,12 +57,16 @@ class InventoryItem(models.Model):
         return self.quantity_total - self.quantity_issued
 
 
+from django.db import models
+from django.contrib.auth.models import User
+from django.core.mail import send_mail
+from django.utils import timezone
+
 class ItemRequest(models.Model):
-    item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100) # This field is potentially redundant if you rely on item.name
+    item = models.ForeignKey('InventoryItem', on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
     quantity = models.PositiveIntegerField(default=1)
     reason = models.TextField(blank=True, null=True)
-
     application_date = models.DateField(default=timezone.now)
     requestor = models.ForeignKey(User, on_delete=models.CASCADE)
 
@@ -75,9 +79,59 @@ class ItemRequest(models.Model):
 
     date_requested = models.DateTimeField(auto_now_add=True)
 
-    def __str__(self):
-        return f"Request for {self.item.name} by {self.requestor.username}" # Reverted to use item.name
+    # Track original status
+    _original_status = None
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._original_status = self.status
+
+    def save(self, *args, **kwargs):
+        status_changed = self.pk and self.status != self._original_status
+        super().save(*args, **kwargs)
+
+        if status_changed:
+            subject = None
+            message = None
+            user = self.requestor
+
+            if self.status == 'Rejected':
+                subject = "Item Request Rejected"
+                message = (
+                    f"Dear {user.first_name or user.username},\n\n"
+                    f"Your request for item \"{self.item.name}\" has been rejected.\n"
+                    f"If you believe this is an error, please contact the store clerk.\n\n"
+                    f"Thank you,\nInventory Management System"
+                )
+            elif self.status == 'Approved':
+                subject = "Item Request Approved"
+                message = (
+                    f"Dear {user.first_name or user.username},\n\n"
+                    f"Your request for item \"{self.item.name}\" has been approved.\n"
+                    f"You will be notified once the item is issued.\n\n"
+                    f"Thank you,\nInventory Management System"
+                )
+            elif self.status == 'Cancelled':
+                subject = "Item Request Cancelled"
+                message = (
+                    f"Dear {user.first_name or user.username},\n\n"
+                    f"Your item request for \"{self.item.name}\" has been cancelled.\n\n"
+                    f"Regards,\nInventory Management System"
+                )
+
+            if subject and message:
+                send_mail(
+                    subject,
+                    message,
+                    from_email=None,  # Uses DEFAULT_FROM_EMAIL from settings.py
+                    recipient_list=[user.email],
+                    fail_silently=False,
+                )
+
+            self._original_status = self.status  # Update tracker
+
+    def __str__(self):
+        return f"Request for {self.item.name} by {self.requestor.username}"
 
 class StockTransaction(models.Model):
     TRANSACTION_TYPES = [
