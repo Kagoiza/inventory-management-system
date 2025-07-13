@@ -74,6 +74,8 @@ def requestor_dashboard(request):
         'available_inventory': available_inventory, # Pass available inventory (though not directly used by default dashboard content, good to have)
     })
 
+from django.core.mail import send_mail  # Add this at the top
+
 @login_required
 def request_item(request):
     item_id_from_get = request.GET.get('item')
@@ -102,12 +104,26 @@ def request_item(request):
             item_request = form.save(commit=False)
             item_request.requestor = request.user
             item_request.save()
+
+            # ✅ Send email notification to the requestor
+            send_mail(
+                subject='Item Request Confirmation',
+                message=(
+                    f"Dear {request.user.first_name or request.user.username},\n\n"
+                    f"Your request for item \"{item_request.item.name}\" has been successfully submitted.\n"
+                    f"We will notify you once it is reviewed or issued.\n\n"
+                    f"Thank you,\nInventory Management Team"
+                ),
+                from_email=None,  # Uses DEFAULT_FROM_EMAIL
+                recipient_list=[request.user.email],
+                fail_silently=False,
+            )
+
             messages.success(request, "Item request submitted successfully!")
             return redirect('requestor_dashboard')
         else:
             messages.error(request, "Please correct the errors below.")
     else:
-        # Prepare initial data for form
         initial_data = {}
         if item_id_from_get and item_id_from_get.isdigit():
             try:
@@ -125,6 +141,7 @@ def request_item(request):
         'available_inventory': available_inventory_list,
         'available_inventory_json': available_inventory_json,
     })
+
 
 @login_required
 def cancel_request(request, request_id):
@@ -146,6 +163,8 @@ def cancel_request(request, request_id):
     else:
         messages.error(request, f"Request for '{item_request.item.name}' (ID: {request_id}) cannot be cancelled because its status is '{item_request.status}'.")
         return redirect('requestor_dashboard')
+    
+
 
 
 # --- Store Clerk Functionality ---
@@ -352,7 +371,6 @@ def search_items(request):
 
 
 @login_required
-@permission_required('invent.view_itemrequest', raise_exception=True)
 def request_summary(request):
     # Filter all requests to only those made by the logged-in requestor
     user_requests = ItemRequest.objects.filter(requestor=request.user)
