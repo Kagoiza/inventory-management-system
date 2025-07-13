@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
+from django.core.mail import send_mail
 
 
 class InventoryItem(models.Model):
@@ -56,11 +57,6 @@ class InventoryItem(models.Model):
         """Calculates the quantity currently available for new issues."""
         return self.quantity_total - self.quantity_issued
 
-
-from django.db import models
-from django.contrib.auth.models import User
-from django.core.mail import send_mail
-from django.utils import timezone
 
 class ItemRequest(models.Model):
     item = models.ForeignKey('InventoryItem', on_delete=models.CASCADE)
