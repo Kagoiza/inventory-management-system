@@ -141,7 +141,7 @@ DEFAULT_FROM_EMAIL = 'rbumija28@gmail.com' # <-- REPLACE with your actual email 
 LOGIN_URL = 'login'
 
 # <-- Session Timeout -->
-SESSION_COOKIE_AGE = 60 # <--10 minutes-->
+SESSION_COOKIE_AGE = 600 # <--10 minutes-->
 SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
 
