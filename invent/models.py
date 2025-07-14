@@ -69,6 +69,7 @@ class ItemRequest(models.Model):
     status = models.CharField(max_length=10, choices=[
         ('Pending', 'Pending'),
         ('Approved', 'Approved'),
+        ('Issued', 'Issued'),
         ('Rejected', 'Rejected'),
         ('Cancelled', 'Cancelled'),
     ], default='Pending')
@@ -105,6 +106,14 @@ class ItemRequest(models.Model):
                     f"Dear {user.first_name or user.username},\n\n"
                     f"Your request for item \"{self.item.name}\" has been approved.\n"
                     f"You will be notified once the item is issued.\n\n"
+                    f"Thank you,\nInventory Management System"
+                )
+            elif self.status == 'Issued':
+                subject = "Item Issued"
+                message = (
+                    f"Dear {user.first_name or user.username},\n\n"
+                    f"Your item \"{self.item.name}\" has been issued successfully.\n"
+                    f"Kindly pick up you item.\n\n"
                     f"Thank you,\nInventory Management System"
                 )
             elif self.status == 'Cancelled':
