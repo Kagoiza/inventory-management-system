@@ -103,6 +103,7 @@ def request_item(request):
         if form.is_valid():
             item_request = form.save(commit=False)
             item_request.requestor = request.user
+            item_request.name = item_request.item.name
             item_request.save()
 
             # ✅ Send email notification to the requestor
