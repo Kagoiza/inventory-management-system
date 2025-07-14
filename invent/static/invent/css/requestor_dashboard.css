@@ -1,0 +1,128 @@
+:root {
+      --sidebar-bg: white;
+      --sidebar-text: #0f0f0f;
+      --sidebar-active: #178526;
+      --sidebar-hover: #15b33c;
+      --card-green: #28a745;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    /* Improved Sidebar */
+    .sidebar {
+      background-color: var(--sidebar-bg);
+      color: var(--sidebar-text);
+      box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+      transition: all 0.3s;
+    }
+    
+    .sidebar .nav-link {
+      color: var(--sidebar-text);
+      border-radius: 5px;
+      padding: 10px 15px;
+      margin-bottom: 5px;
+      transition: all 0.3s;
+    }
+    
+    .sidebar .nav-link:hover {
+      background-color: var(--sidebar-hover);
+      transform: translateX(5px);
+    }
+    
+    .sidebar .nav-link.active {
+      background-color: var(--sidebar-active);
+      font-weight: 600;
+    }
+    
+    .sidebar .nav-link i {
+      width: 20px;
+      text-align: center;
+      margin-right: 10px;
+    }
+    
+    /* Main Content */
+    .main-content {
+      padding: 20px;
+      background-color: #f8f9fa;
+      min-height: 100vh;
+    }
+    
+    /* Cards */
+    .summary-card {
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      transition: transform 0.3s;
+      height: 100%;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .summary-card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .card-icon {
+      position: absolute;
+      right: 20px;
+      top: 20px;
+      font-size: 2rem;
+      opacity: 0.2;
+    }
+    
+    /* Total Requests Card - Green */
+    .border-left-primary {
+      border-left: 4px solid var(--card-green);
+      background-color: var(--card-green);
+      color: white;
+    }
+    
+    .border-left-primary h6 {
+      color: rgba(255,255,255,0.8) !important;
+    }
+    
+    /* Data Table */
+    .data-table {
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    /* Search Box */
+    .search-box {
+      border-radius: 20px;
+      padding: 10px 20px;
+      border: 1px solid #dee2e6;
+    }
+    
+    .search-btn {
+      border-radius: 20px;
+      padding: 10px 20px;
+      background-color: var(--sidebar-bg);
+      color: white;
+    }
+    
+    /* Responsive Adjustments */
+    @media (max-width: 768px) {
+      .sidebar {
+        width: 70px;
+        overflow: hidden;
+      }
+      
+      .sidebar .nav-link span {
+        display: none;
+      }
+      
+      .sidebar .nav-link i {
+        margin-right: 0;
+        font-size: 1.2rem;
+      }
+      
+      .main-content {
+        margin-left: 70px;
+      }
+      
+      .greeting {
+        font-size: 1.2rem;
+      }
+    }

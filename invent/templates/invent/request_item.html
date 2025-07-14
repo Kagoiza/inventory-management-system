@@ -1,0 +1,92 @@
+{# invent/templates/invent/request_item.html #}
+{% extends "invent/requestor_dashboard.html" %} {# EXTENDS THE MODIFIED DASHBOARD TEMPLATE #}
+{% load static %} {# Make sure load static is here too if you use static files directly #}
+
+{% block title %}Request Item{% endblock %} {# Set dynamic title #}
+
+{% block main_content %} {# This content will be inserted into the main_content block of requestor_dashboard.html #}
+<div class="container-fluid mt-4"> {# Using container-fluid for full width #}
+    <h2 class="mb-4 greeting">Request Item</h2>
+
+    {% if messages %}
+        <div class="messages mb-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="card p-4 shadow-sm">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label for="{{ form.item.id_for_label }}" class="form-label">{{ form.item.label }}:</label>
+                {{ form.item }} {# This renders the <select> tag with options based on the form's queryset #}
+                {% if form.item.errors %}
+                    {% for error in form.item.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <p class="mb-1">Available: <span id="available_qty" class="fw-bold">--</span></p>
+                <p>Condition: <span id="item_condition" class="fw-bold">--</span></p>
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.quantity.id_for_label }}" class="form-label">{{ form.quantity.label }}:</label>
+                {{ form.quantity }} {# Django will render the input with attributes from its widget #}
+                {% if form.quantity.errors %}
+                    {% for error in form.quantity.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="mb-3">
+                <label for="{{ form.reason.id_for_label }}" class="form-label">{{ form.reason.label }}:</label>
+                {{ form.reason }} {# Django will render the textarea #}
+                {% if form.reason.errors %}
+                    {% for error in form.reason.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-success">Submit Request</button>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const itemSelect = document.getElementById('{{ form.item.id_for_label }}');
+        const availableQtySpan = document.getElementById('available_qty');
+        const itemConditionSpan = document.getElementById('item_condition');
+        const quantityInput = document.getElementById('{{ form.quantity.id_for_label }}');
+
+        const itemDetails = JSON.parse('{{ available_inventory_json|escapejs }}');
+
+        function updateItemInfo() {
+            const selectedItemId = itemSelect.value;
+            const details = itemDetails.find(item => item.id == selectedItemId);
+
+            if (details) {
+                availableQtySpan.textContent = details.quantity_remaining;
+                itemConditionSpan.textContent = details.condition;
+                quantityInput.max = details.quantity_remaining;
+            } else {
+                availableQtySpan.textContent = '--';
+                itemConditionSpan.textContent = '--';
+                quantityInput.max = '';
+                quantityInput.value = '';
+            }
+        }
+
+        itemSelect.addEventListener('change', updateItemInfo);
+        updateItemInfo(); // Run on load
+    });
+</script>
+{% endblock main_content %}
