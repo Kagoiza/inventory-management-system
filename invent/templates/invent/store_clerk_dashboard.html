@@ -17,20 +17,43 @@
       <h5>{{ user.first_name|default:user.username }}</h5>
     </div>
     <ul class="nav flex-column">
-      <li class="nav-item"><a class="nav-link text-dark" href="{% url 'store_clerk_dashboard' %}"> Home</a></li>
-      <li class="nav-item"><a class="nav-link text-dark" href="{% url 'manage_stock' %}"> Stock Summary</a></li>
+      <li class="nav-item">
+        <a class="nav-link text-dark" href="{% url 'store_clerk_dashboard' %}">
+          <i class="fas fa-home me-2"></i> Home
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link text-dark" href="{% url 'manage_stock' %}">
+          <i class="fas fa-boxes-stacked me-2"></i> Stock Summary
+        </a>
+      </li>
       <li class="nav-item">
         <a class="nav-link text-dark" href="{% url 'issue_item' %}">
-          Issue Item
+          <i class="fas fa-share-square me-2"></i> Issue Item
           {% if pending_requests_count %}
             <span class="badge bg-danger ms-2">{{ pending_requests_count }}</span>
           {% endif %}
         </a>
       </li>
-      <li class="nav-item"><a class="nav-link text-dark" href="{% url 'manage_stock' %}"> Manage Stock</a></li>
-      <li class="nav-item"><a class="nav-link text-dark" href="{% url 'adjust_stock' %}"> Adjust Stock</a></li>
-      <li class="nav-item mt-4"><a class="nav-link text-danger" href="{% url 'logout' %}"> Logout</a></li>
+      <li class="nav-item">
+        <a class="nav-link text-dark" href="{% url 'adjust_stock' %}">
+          <i class="fas fa-sliders-h me-2"></i> Adjust Stock
+        </a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link text-dark" href="{% url 'reports' %}">
+          <i class="fas fa-chart-line me-2"></i> Reports
+        </a>
+      </li>
+      <li class="nav-item mt-4">
+        <a class="nav-link text-danger" href="{% url 'logout' %}">
+          <i class="fas fa-sign-out-alt me-2"></i> Logout
+        </a>
+      </li>
     </ul>
+    <div class="mt-5 text-center small text-muted">
+      Powered by ICT Authority
+    </div>
   </div>
 
   <!-- Main Content -->

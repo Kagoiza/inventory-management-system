@@ -18,6 +18,7 @@ urlpatterns = [
     path('store_clerk_dashboard/', views.store_clerk_dashboard, name ='store_clerk_dashboard'),
     path('manage_stock/', views.manage_stock, name = 'manage_stock'),
     path('edit_item/<int:item_id>/', views.edit_item, name='edit_item'),
+    path('reports/', views.reports_view, name='reports'),
     
     # NEW Functionalities (Issue and Adjust)
    

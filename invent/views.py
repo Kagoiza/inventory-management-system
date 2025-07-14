@@ -12,11 +12,12 @@ import json
 from django.utils.safestring import mark_safe
 
 # Correct Model and Form Imports
-from .models import ItemRequest, InventoryItem, StockTransaction # Removed 'Item' if it's not actually used
+from .models import ItemRequest, InventoryItem, StockTransaction 
 from .forms import ItemRequestForm
 from .forms import InventoryItemForm
 from .forms import IssueItemForm
 from .forms import AdjustStockForm
+
 
 def register(request):
     if request.method == 'POST':
@@ -444,3 +445,27 @@ def adjust_stock(request):
         'recent_transactions': recent_transactions,
     }
     return render(request, 'invent/adjust_stock.html', context)
+
+@login_required
+@permission_required('invent.change_inventoryitem', raise_exception=True)
+def reports(request):
+    return render(request, 'invent/reports.html')
+
+def reports_view(request):
+    context = {
+        'total_items': InventoryItem.objects.aggregate(total=Sum('quantity_total'))['total'] or 0,
+        'total_requests': ItemRequest.objects.count(),
+        'pending_count': ItemRequest.objects.filter(status='Pending').count(),
+        'approved_count': ItemRequest.objects.filter(status='Approved').count(),
+        'issued_count': ItemRequest.objects.filter(status='Issued').count(),
+        'rejected_count': ItemRequest.objects.filter(status='Rejected').count(),
+        'returned_count': ItemRequest.objects.filter(status='Returned').count(),
+
+        # Top 2 requested items
+        'top_requested_items': (
+            ItemRequest.objects.values('item__name')
+            .annotate(request_count=Count('id'))
+            .order_by('-request_count')[:2]
+        )
+    }
+    return render(request, 'invent/reports.html', context)
