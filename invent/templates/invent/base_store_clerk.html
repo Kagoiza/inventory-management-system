@@ -147,11 +147,18 @@
                             <i class="fas fa-fw fa-share-square me-2"></i> Issue Item
                         </a>
                     </li>
-                    <li class="nav-item mb-2">
+                   <li class="nav-item mb-2">
                         <a class="nav-link {% if request.resolver_match.url_name == 'adjust_stock' %}active{% endif %}" href="{% url 'adjust_stock' %}">
                             <i class="fas fa-fw fa-sliders-h me-2"></i> Adjust Stock
                         </a>
                     </li>
+
+                    <li class="nav-item mb-2">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'upload_inventory' %}active{% endif %}" href="{% url 'upload_inventory' %}">
+                            <i class="fas fa-fw fa-upload me-2"></i> Upload Inventory
+                        </a>
+                    </li>
+
                     <li class="nav-item mb-2">
                         {# Link to audit logs or reports if available, using primary text color #}
                         <a class="nav-link" href="#">

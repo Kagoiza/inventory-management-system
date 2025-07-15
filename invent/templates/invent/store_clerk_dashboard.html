@@ -41,6 +41,12 @@
         </a>
       </li>
       <li class="nav-item">
+        <a class="nav-link text-dark" href="{% url 'upload_inventory' %}">
+          <i class="fas fa-upload me-2"></i> Upload Inventory
+        </a>
+      </li>
+
+      <li class="nav-item">
         <a class="nav-link text-dark" href="{% url 'reports' %}">
           <i class="fas fa-chart-line me-2"></i> Reports
         </a>
@@ -64,6 +70,8 @@
       <a class="btn btn-outline-primary" href="{% url 'issue_item' %}">📤 Issue Item</a>
       <a class="btn btn-outline-secondary" href="{% url 'manage_stock' %}">⚙️ Manage Stock</a>
       <a class="btn btn-outline-dark" href="{% url 'adjust_stock' %}">🔧 Adjust Stock</a>
+      <a class="btn btn-outline-success" href="{% url 'upload_inventory' %}">📥 Upload Inventory</a>
+
     </div>
 
     <!-- Stat Cards -->
