@@ -11,19 +11,22 @@ urlpatterns = [
     path('request_item/', views.request_item, name='request_item'),
     path('search_items/', views.search_items, name='search_items'),
     path('request_summary/', views.request_summary, name='request_summary'),
-    path('cancel-request/<int:request_id>/', views.cancel_request, name='cancel_request'),
+    path('cancel-request/<int:request_id>/',
+         views.cancel_request, name='cancel_request'),
 
 
     # Store Clerk Paths
-    path('store_clerk_dashboard/', views.store_clerk_dashboard, name ='store_clerk_dashboard'),
-    path('manage_stock/', views.manage_stock, name = 'manage_stock'),
+    path('store_clerk_dashboard/', views.store_clerk_dashboard,
+         name='store_clerk_dashboard'),
+    path('manage_stock/', views.manage_stock, name='manage_stock'),
     path('edit_item/<int:item_id>/', views.edit_item, name='edit_item'),
     path('reports/', views.reports_view, name='reports'),
-    
+
     # NEW Functionalities (Issue and Adjust)
-   
+
     path('issue-item/', views.issue_item, name='issue_item'),
     path('adjust_stock/', views.adjust_stock, name='adjust_stock'),
+    path('upload-inventory/', views.upload_inventory, name='upload_inventory'),
 
-    
+
 ]
