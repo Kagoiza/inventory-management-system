@@ -60,9 +60,14 @@
     </div>
 </div>
 
+
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const itemSelect = document.getElementById('{{ form.item.id_for_label }}');
         const availableQtySpan = document.getElementById('available_qty');
         const itemConditionSpan = document.getElementById('item_condition');
         const quantityInput = document.getElementById('{{ form.quantity.id_for_label }}');
@@ -70,7 +75,7 @@
         const itemDetails = JSON.parse('{{ available_inventory_json|escapejs }}');
 
         function updateItemInfo() {
-            const selectedItemId = itemSelect.value;
+            const selectedItemId = $('#{{ form.item.id_for_label }}').val();
             const details = itemDetails.find(item => item.id == selectedItemId);
 
             if (details) {
@@ -85,8 +90,20 @@
             }
         }
 
-        itemSelect.addEventListener('change', updateItemInfo);
-        updateItemInfo(); // Run on load
+        // Initialize Select2
+        $('#{{ form.item.id_for_label }}').select2({
+            placeholder: 'Select an item',
+            width: '100%'
+        });
+
+        // Handle Select2 value change
+        $('#{{ form.item.id_for_label }}').on('change', function () {
+            updateItemInfo();
+        });
+
+        updateItemInfo(); // Run on page load
+
     });
 </script>
+
 {% endblock main_content %}
