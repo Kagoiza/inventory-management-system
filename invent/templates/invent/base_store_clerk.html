@@ -7,7 +7,9 @@
     <title>{% block title %}Store Clerk Panel{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+
     <style>
         /* --- Custom Green Primary Color --- */
         :root {
@@ -32,41 +34,43 @@
             font-family: 'Inter', sans-serif; /* Assuming Inter font for consistency */
             background-color: #f8f9fa; /* Light background */
         }
-        .sidebar {
+        /* Sidebar styling - now applied to the Bootstrap column classes */
+        .sidebar-wrapper {
             background-color: #ffffff; /* White sidebar background */
             color: #343a40; /* Dark text for sidebar */
             border-right: 1px solid #e9ecef; /* Light border */
-            position: fixed;
-            height: 100vh;
-            width: 250px;
-            padding: 1.5rem;
+            /* Removed fixed position and width - handled by Bootstrap grid */
+            /* Add min-vh-100 to ensure it takes full viewport height */
+            min-height: 100vh;
+            /* Flexbox for content distribution */
             display: flex;
             flex-direction: column;
             justify-content: space-between; /* Pushes logout/ICT Authority to bottom */
             z-index: 1000; /* Ensure sidebar is above other content */
         }
-        .sidebar .nav-link {
+        .sidebar-wrapper .nav-link {
             color: #495057; /* Slightly lighter dark for links */
             padding: 0.75rem 1rem;
             border-radius: 0.5rem; /* Rounded corners for links */
             transition: background-color 0.2s ease, color 0.2s ease;
         }
-        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+        .sidebar-wrapper .nav-link:hover, .sidebar-wrapper .nav-link.active {
             background-color: #e9ecef; /* Light grey on hover/active */
             color: #212529; /* Darker text on hover/active */
         }
-        .sidebar .nav-link.text-danger {
+        .sidebar-wrapper .nav-link.text-danger {
             color: #dc3545 !important; /* Red for logout */
         }
-        .sidebar .nav-link.text-danger:hover {
+        .sidebar-wrapper .nav-link.text-danger:hover {
             background-color: #dc3545;
             color: #fff !important;
         }
-        .main-content {
-            margin-left: 250px; /* Offset for fixed sidebar */
+        /* Main content margin removed, handled by Bootstrap grid */
+        /* .main-content {
+            margin-left: 250px;
             padding: 1.5rem;
-            flex-grow: 1; /* Allow main content to take remaining space */
-        }
+            flex-grow: 1;
+        } */
         .card {
             border-radius: 0.75rem; /* More rounded cards */
             border: none; /* No default border */
@@ -117,70 +121,110 @@
             border-color: rgba(var(--bs-primary-rgb), 0.5); /* Use primary-rgb for focus color */
             box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25); /* Use primary-rgb for focus shadow */
         }
+
+        /* Responsive adjustments for smaller screens */
+        @media (max-width: 767.98px) { /* Below medium breakpoint */
+            .sidebar-wrapper {
+                position: relative; /* Sidebar becomes relative, stacks normally */
+                min-height: auto; /* Height adapts to content */
+                border-right: none;
+                border-bottom: 1px solid #e9ecef;
+            }
+            .navbar-toggler-fixed {
+                position: fixed;
+                top: 1rem;
+                left: 1rem;
+                z-index: 1050; /* Above sidebar */
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="d-flex">
-        <div class="sidebar">
-            <div>
-                <div class="text-center mb-4">
-                    {# Use a static logo if available. Ensure your STATICFILES_DIRS and STATIC_URL are set in settings.py #}
-                    {# and you have run 'python manage.py collectstatic' #}
-                    {# <img src="{% static 'invent/images/logo.png' %}" alt="Company Logo" class="img-fluid mb-2" style="max-width: 100px;"> #}
-                    <h5 class="fw-bold mb-1 text-dark">{{ user.first_name|default:user.username }}</h5> {# Display username or first name #}
-                    <small class="text-muted">Store Clerk</small> {# Role identifier #}
+    <div class="container-fluid"> {# Use container-fluid for full width #}
+        <div class="row">
+            {# Navbar Toggler for small screens (optional, but recommended for mobile) #}
+            <nav class="navbar navbar-expand-md d-md-none navbar-light bg-light">
+                <div class="container-fluid">
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <a class="navbar-brand me-auto" href="#">Store Clerk</a>
                 </div>
-                <hr class="border-secondary opacity-25" />
-                <ul class="nav flex-column">
-                    <li class="nav-item mb-2">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'store_clerk_dashboard' %}active{% endif %}" href="{% url 'store_clerk_dashboard' %}">
-                            <i class="fas fa-fw fa-home me-2"></i> Home
-                        </a>
-                    </li>
-                    <li class="nav-item mb-2">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'manage_stock' %}active{% endif %}" href="{% url 'manage_stock' %}">
-                            <i class="fas fa-fw fa-boxes me-2"></i> Stock Summary
-                        </a>
-                    </li>
-                    <li class="nav-item mb-2">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'issue_item' %}active{% endif %}" href="{% url 'issue_item' %}">
-                            <i class="fas fa-fw fa-share-square me-2"></i> Issue Item
-                        </a>
-                    </li>
-                    <li class="nav-item mb-2">
-                        <a class="nav-link {% if request.resolver_match.url_name == 'adjust_stock' %}active{% endif %}" href="{% url 'adjust_stock' %}">
-                            <i class="fas fa-fw fa-sliders-h me-2"></i> Adjust Stock
-                        </a>
-                    </li>
-                    <li class="nav-item mb-2">
-                        {# Link to audit logs or reports if available, using primary text color #}
-                        <a class="nav-link" href="#">
-                            <i class="fas fa-fw fa-chart-line me-2"></i> Reports
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            <div class="text-center pt-3">
-                <hr class="border-secondary opacity-25" />
-                <ul class="nav flex-column">
-                    <li class="nav-item mb-2">
-                        <a class="nav-link text-danger" href="{% url 'logout' %}"> {# Assuming a 'logout' URL is defined #}
-                            <i class="fas fa-fw fa-right-from-bracket me-2"></i> Logout
-                        </a>
-                    </li>
-                </ul>
-                <small class="text-muted">Powered by ICT Authority</small>
-            </div>
-        </div>
+            </nav>
 
-        <div class="main-content">
-            {% block content %}
-            {# Content from child templates will be inserted here #}
-            {% endblock %}
+            {# Sidebar Column #}
+            {# d-md-block makes it block on medium and up, collapse makes it hidden on small unless toggled #}
+            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar-wrapper collapse show"> {# Added 'show' to make it visible by default on larger screens #}
+                <div class="position-sticky pt-3 h-100 d-flex flex-column"> {# h-100 and d-flex flex-column added here #}
+                    <div>
+                        <div class="text-center mb-4">
+                            <h5 class="fw-bold mb-1 text-dark">{{ user.first_name|default:user.username }}</h5>
+                            <small class="text-muted">Store Clerk</small>
+                        </div>
+                        <hr class="border-secondary opacity-25" />
+                        <ul class="nav flex-column">
+                            <li class="nav-item mb-2">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'store_clerk_dashboard' %}active{% endif %}" href="{% url 'store_clerk_dashboard' %}">
+                                    <i class="fas fa-fw fa-home me-2"></i> Home
+                                </a>
+                            </li>
+                            <li class="nav-item mb-2">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'manage_stock' %}active{% endif %}" href="{% url 'manage_stock' %}">
+                                    <i class="fas fa-fw fa-boxes me-2"></i> Manage Stock
+                                </a>
+                            </li>
+                            <li class="nav-item mb-2">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'issue_item' %}active{% endif %}" href="{% url 'issue_item' %}">
+                                    <i class="fas fa-fw fa-share-square me-2"></i> Issue Item
+                                </a>
+                            </li>
+                            <li class="nav-item mb-2">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'adjust_stock' %}active{% endif %}" href="{% url 'adjust_stock' %}">
+                                    <i class="fas fa-fw fa-sliders-h me-2"></i> Adjust Stock
+                                </a>
+                            </li>
+                            <li class="nav-item mb-2">
+                                <a class="nav-link {% if request.resolver_match.url_name == 'upload_inventory' %}active{% endif %}" href="{% url 'upload_inventory' %}">
+                                    <i class="fas fa-fw fa-upload me-2"></i> Upload Inventory
+                                </a>
+                            </li>
+                            <li class="nav-item mb-2">
+                                <a class="nav-link" href="{% url 'reports' %}">
+                                    <i class="fas fa-fw fa-chart-line me-2"></i> Reports
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="text-center pt-3 mt-auto"> {# mt-auto pushes this div to the bottom #}
+                        <hr class="border-secondary opacity-25" />
+                        <ul class="nav flex-column">
+                            <li class="nav-item mb-2">
+                                <a class="nav-link text-danger" href="{% url 'logout' %}">
+                                    <i class="fas fa-fw fa-right-from-bracket me-2"></i> Logout
+                                </a>
+                            </li>
+                        </ul>
+                        <small class="text-muted">Powered by ICT Authority</small>
+                    </div>
+                </div>
+            </nav>
+
+            {# Main Content Column #}
+            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
+                {# Add a top padding for small screens to clear the fixed navbar-toggler if implemented #}
+                <div class="d-md-none pt-4"></div>
+                {% block content %}
+                {# Content from child templates will be inserted here #}
+                {% endblock %}
+            </main>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+    {% block extra_js %}{% endblock %} {# This block is important for page-specific JS #}
 </body>
 </html>

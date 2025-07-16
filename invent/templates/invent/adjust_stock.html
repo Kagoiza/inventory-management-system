@@ -4,7 +4,7 @@
 {% block content %}
 <div class="container-fluid mt-4">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0 text-primary"><i class="fas fa-sliders-h me-2"></i> Adjust Inventory Stock</h2> {# Will now be green #}
+        <h2 class="mb-0 text-primary"><i class="fas fa-sliders-h me-2"></i> Adjust Inventory Stock</h2>
         <a href="{% url 'store_clerk_dashboard' %}" class="btn btn-outline-secondary">
             <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
         </a>
@@ -22,7 +22,7 @@
     {% endif %}
 
     <div class="card shadow-sm mb-4">
-        <div class="card-header bg-primary text-white py-3"> {# Will now be green #}
+        <div class="card-header bg-primary text-white py-3">
             <h4 class="mb-0">Adjustment Details</h4>
         </div>
         <div class="card-body">
@@ -32,7 +32,7 @@
                 <div class="row">
                     <div class="col-md-12 mb-3">
                         <label for="{{ form.item.id_for_label }}" class="form-label">Item to Adjust:</label>
-                        {{ form.item }}
+                        {{ form.item }} {# This is your <select> element #}
                         {% if form.item.errors %}<div class="text-danger small">{{ form.item.errors }}</div>{% endif %}
                     </div>
                 </div>
@@ -49,11 +49,6 @@
                         {% if form.reason.errors %}<div class="text-danger small">{{ form.reason.errors }}</div>{% endif %}
                     </div>
                 </div>
-                <div class="mb-3">
-                    <label for="{{ form.notes.id_for_label }}" class="form-label">Notes (Optional):</label>
-                    {{ form.notes }}
-                    {% if form.notes.errors %}<div class="text-danger small">{{ form.notes.errors }}</div>{% endif %}
-                </div>
 
                 {% if form.non_field_errors %}
                     <div class="alert alert-danger mt-3">
@@ -61,10 +56,24 @@
                     </div>
                 {% endif %}
 
-                <button type="submit" class="btn btn-primary mt-3"><i class="fas fa-sync-alt me-2"></i> Adjust Stock</button> {# Will now be green #}
+                <button type="submit" class="btn btn-primary mt-3"><i class="fas fa-sync-alt me-2"></i> Adjust Stock</button>
                 <a href="{% url 'store_clerk_dashboard' %}" class="btn btn-secondary mt-3 ms-2">Cancel</a>
             </form>
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    $(document).ready(function() {
+        // Initialize Select2 on the 'item' dropdown
+        // Django form fields usually get an ID of 'id_' followed by the field name.
+        // So, for 'form.item', the ID will be 'id_item' .
+        $('#id_item').select2({
+            theme: 'bootstrap-5', // Apply Bootstrap 5 theme for consistent styling
+            width: '100%' // Ensure it takes full width of its parent container
+        });
+    });
+</script>
 {% endblock %}
