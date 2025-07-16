@@ -399,24 +399,6 @@ def issue_item(request):
 
 
 @login_required
-def search_items(request):
-    query = request.GET.get('q')
-    results = InventoryItem.objects.none()
-    if query:
-        results = InventoryItem.objects.filter(
-            Q(name__icontains=query) |
-            Q(category__icontains=query) |
-            Q(serial_number__icontains=query)
-        ).order_by('name')
-
-    context = {
-        'query': query,
-        'results': results,
-    }
-    return render(request, 'invent/search_items.html', context)
-
-
-@login_required
 def request_summary(request):
     # Filter all requests to only those made by the logged-in requestor
     user_requests = ItemRequest.objects.filter(requestor=request.user)
