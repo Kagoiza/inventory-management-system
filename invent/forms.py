@@ -82,11 +82,6 @@ class IssueItemForm(forms.Form):
         widget=forms.TextInput(
             attrs={'class': 'form-control', 'placeholder': 'Recipient (e.g., Department, Name)'})
     )
-    notes = forms.CharField(
-        required=False,
-        widget=forms.Textarea(
-            attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Optional notes'})
-    )
 
     def clean(self):
         cleaned_data = super().clean()

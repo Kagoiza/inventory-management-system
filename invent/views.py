@@ -1,3 +1,4 @@
+from django.db.models import Q
 from django.core.mail import send_mail  # Add this at the top
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import AuthenticationForm
@@ -215,6 +216,8 @@ def store_clerk_dashboard(request):
 @login_required
 @permission_required('invent.view_inventoryitem', raise_exception=True)
 def manage_stock(request):
+    form = InventoryItemForm()
+
     if request.method == 'POST':
         form = InventoryItemForm(request.POST)
         if form.is_valid():
@@ -227,14 +230,21 @@ def manage_stock(request):
         else:
             messages.error(
                 request, "Error adding item. Please check the form.")
-    else:
-        form = InventoryItemForm()
 
+    query = request.GET.get('q', '')
     items = InventoryItem.objects.all().order_by('name')
+
+    if query:
+        items = items.filter(
+            Q(name__icontains=query) |
+            Q(serial_number__icontains=query) |
+            Q(category__icontains=query)
+        )
 
     context = {
         'form': form,
         'items': items,
+        'query': query,
     }
     return render(request, 'invent/manage_stock.html', context)
 
@@ -342,7 +352,6 @@ def issue_item(request):
             item_to_issue = form.cleaned_data['item']
             quantity = form.cleaned_data['quantity']
             issued_to = form.cleaned_data['issued_to']
-            notes = form.cleaned_data['notes']
 
             try:
                 with transaction.atomic():
@@ -365,7 +374,7 @@ def issue_item(request):
                         transaction_type='Issue',
                         quantity=-quantity,
                         issued_to=issued_to,
-                        reason=f"Direct issue to {issued_to}. " + notes,
+                        reason=f"Direct issue to {issued_to}. ",
                         recorded_by=request.user
                     )
                 messages.success(
@@ -393,10 +402,11 @@ def issue_item(request):
 def search_items(request):
     query = request.GET.get('q')
     results = InventoryItem.objects.none()
-
     if query:
         results = InventoryItem.objects.filter(
-            name__icontains=query
+            Q(name__icontains=query) |
+            Q(category__icontains=query) |
+            Q(serial_number__icontains=query)
         ).order_by('name')
 
     context = {
@@ -450,7 +460,6 @@ def adjust_stock(request):
             item = form.cleaned_data['item']
             adjustment_quantity = form.cleaned_data['adjustment_quantity']
             reason = form.cleaned_data['reason']
-            notes = form.cleaned_data['notes']
 
             try:
                 with transaction.atomic():
@@ -465,7 +474,6 @@ def adjust_stock(request):
                         transaction_type=transaction_type,
                         quantity=adjustment_quantity,
                         reason=reason,
-                        notes=notes,
                         recorded_by=request.user
                     )
                 messages.success(
