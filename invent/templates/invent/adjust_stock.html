@@ -49,11 +49,7 @@
                         {% if form.reason.errors %}<div class="text-danger small">{{ form.reason.errors }}</div>{% endif %}
                     </div>
                 </div>
-                <div class="mb-3">
-                    <label for="{{ form.notes.id_for_label }}" class="form-label">Notes (Optional):</label>
-                    {{ form.notes }}
-                    {% if form.notes.errors %}<div class="text-danger small">{{ form.notes.errors }}</div>{% endif %}
-                </div>
+                
 
                 {% if form.non_field_errors %}
                     <div class="alert alert-danger mt-3">
