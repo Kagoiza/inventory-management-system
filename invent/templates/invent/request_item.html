@@ -1,11 +1,11 @@
 {# invent/templates/invent/request_item.html #}
-{% extends "invent/requestor_dashboard.html" %} {# EXTENDS THE MODIFIED DASHBOARD TEMPLATE #}
-{% load static %} {# Make sure load static is here too if you use static files directly #}
+{% extends "invent/requestor_dashboard.html" %}
+{% load static %}
 
-{% block title %}Request Item{% endblock %} {# Set dynamic title #}
+{% block title %}Request Item{% endblock %}
 
-{% block main_content %} {# This content will be inserted into the main_content block of requestor_dashboard.html #}
-<div class="container-fluid mt-4"> {# Using container-fluid for full width #}
+{% block main_content %}
+<div class="container-fluid mt-4">
     <h2 class="mb-4 greeting">Request Item</h2>
 
     {% if messages %}
@@ -17,12 +17,12 @@
     {% endif %}
 
     <div class="card p-4 shadow-sm">
-        <form method="post">
+        <form method="post" id="itemRequestForm">
             {% csrf_token %}
 
             <div class="mb-3">
                 <label for="{{ form.item.id_for_label }}" class="form-label">{{ form.item.label }}:</label>
-                {{ form.item }} {# This renders the <select> tag with options based on the form's queryset #}
+                {{ form.item }}
                 {% if form.item.errors %}
                     {% for error in form.item.errors %}
                         <div class="text-danger small">{{ error }}</div>
@@ -37,7 +37,7 @@
 
             <div class="mb-3">
                 <label for="{{ form.quantity.id_for_label }}" class="form-label">{{ form.quantity.label }}:</label>
-                {{ form.quantity }} {# Django will render the input with attributes from its widget #}
+                {{ form.quantity }}
                 {% if form.quantity.errors %}
                     {% for error in form.quantity.errors %}
                         <div class="text-danger small">{{ error }}</div>
@@ -47,7 +47,7 @@
 
             <div class="mb-3">
                 <label for="{{ form.reason.id_for_label }}" class="form-label">{{ form.reason.label }}:</label>
-                {{ form.reason }} {# Django will render the textarea #}
+                {{ form.reason }}
                 {% if form.reason.errors %}
                     {% for error in form.reason.errors %}
                         <div class="text-danger small">{{ error }}</div>
@@ -55,25 +55,28 @@
                 {% endif %}
             </div>
 
-            <button type="submit" class="btn btn-success">Submit Request</button>
+            <button type="submit" class="btn btn-success" id="submitBtn">
+                Submit Request
+                <span class="spinner-border spinner-border-sm d-none ms-2" role="status" aria-hidden="true" id="submitSpinner"></span>
+            </button>
         </form>
     </div>
 </div>
 
-
+<!-- Select2 Styles & Scripts -->
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        const itemSelect = document.getElementById('{{ form.item.id_for_label }}');
         const availableQtySpan = document.getElementById('available_qty');
         const itemConditionSpan = document.getElementById('item_condition');
         const quantityInput = document.getElementById('{{ form.quantity.id_for_label }}');
-
         const itemDetails = JSON.parse('{{ available_inventory_json|escapejs }}');
 
+        // Update item info
         function updateItemInfo() {
             const selectedItemId = $('#{{ form.item.id_for_label }}').val();
             const details = itemDetails.find(item => item.id == selectedItemId);
@@ -96,14 +99,22 @@
             width: '100%'
         });
 
-        // Handle Select2 value change
+        // Handle change in Select2 dropdown
         $('#{{ form.item.id_for_label }}').on('change', function () {
             updateItemInfo();
         });
 
-        updateItemInfo(); // Run on page load
+        updateItemInfo(); // Load item info on page load
 
+        // Prevent double submission
+        const form = document.getElementById('itemRequestForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const spinner = document.getElementById('submitSpinner');
+
+        form.addEventListener('submit', function () {
+            submitBtn.disabled = true;
+            spinner.classList.remove('d-none');
+        });
     });
 </script>
-
 {% endblock main_content %}

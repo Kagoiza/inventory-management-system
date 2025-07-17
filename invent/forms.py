@@ -28,6 +28,19 @@ class ItemRequestForm(forms.ModelForm):
             'quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': 1}),
         }
 
+    def clean(self):
+        cleaned_data = super().clean()
+        item = cleaned_data.get('item')
+        quantity = cleaned_data.get('quantity')
+
+        if item and quantity:
+            available = item.quantity_remaining()
+            if quantity > available:
+                raise forms.ValidationError(
+                    f"You cannot request {quantity} units of '{item.name}' — only {available} in stock."
+                )
+
+        return cleaned_data
 
 class InventoryItemForm(forms.ModelForm):
     class Meta:
