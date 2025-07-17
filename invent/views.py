@@ -1,34 +1,30 @@
-from django.db.models import Q, Sum, F, Count
-from django.core.mail import send_mail
+from django.db.models import Q
+from django.core.mail import send_mail  # Add this at the top
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.forms import AuthenticationForm
+from .forms import CustomCreationForm
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
+from django.db.models import Sum, F, Count, Q
 from django.db import transaction
+# Keep HttpResponse for other potential uses, or remove if truly not needed elsewhere
 from django.http import HttpResponse
 from django.utils import timezone
+import json
 from django.utils.safestring import mark_safe
+
+# Correct Model and Form Imports
+from .models import ItemRequest, InventoryItem, StockTransaction
+from .forms import ItemRequestForm
+from .forms import InventoryItemForm
+from .forms import IssueItemForm
+from .forms import AdjustStockForm
+import openpyxl
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.contrib.auth.models import Group
-
-import json
-import openpyxl
-
-from .forms import (
-    CustomCreationForm,
-    ItemRequestForm,
-    InventoryItemForm,
-    IssueItemForm,
-    AdjustStockForm
-)
-
-from .models import (
-    ItemRequest,
-    InventoryItem,
-    StockTransaction
-)
+from django.contrib import messages
 
 
 def register(request):
@@ -50,10 +46,12 @@ def custom_login(request):
         if form.is_valid():
             user = form.get_user()
             login(request, user)
+
             if user.is_staff:
                 return redirect('store_clerk_dashboard')
             else:
                 return redirect('requestor_dashboard')
+
         else:
             messages.error(request, "Invalid username or password.")
     else:
@@ -69,14 +67,24 @@ def logout_view(request):
 
 @login_required
 def requestor_dashboard(request):
-    user_requests = ItemRequest.objects.filter(requestor=request.user).order_by('-date_requested')
-    available_inventory = [item for item in InventoryItem.objects.all().order_by('name') if item.quantity_remaining() > 0]
+    user_requests = ItemRequest.objects.filter(
+        requestor=request.user).order_by('-date_requested')
+
+    # Fetch available inventory items for the requestor
+    # Only show items with a quantity remaining > 0
+    available_inventory = [item for item in InventoryItem.objects.all().order_by(
+        'name') if item.quantity_remaining() > 0]
+
+    total_requests = user_requests.count()
+    approved_count = user_requests.filter(status='Approved').count()
+    pending_count = user_requests.filter(status='Pending').count()
 
     return render(request, 'invent/requestor_dashboard.html', {
         'requests': user_requests,
-        'total_requests': user_requests.count(),
-        'approved_count': user_requests.filter(status='Approved').count(),
-        'pending_count': user_requests.filter(status='Pending').count(),
+        'total_requests': total_requests,
+        'approved_count': approved_count,
+        'pending_count': pending_count,
+        # Pass available inventory (though not directly used by default dashboard content, good to have)
         'available_inventory': available_inventory,
     })
 
@@ -87,12 +95,13 @@ def request_item(request):
 
     available_inventory_queryset = InventoryItem.objects.all().order_by('name')
     available_inventory_list = [
-        item for item in available_inventory_queryset if item.quantity_remaining() > 0
-    ]
+        item for item in available_inventory_queryset if item.quantity_remaining() > 0]
 
     available_item_ids = [item.id for item in available_inventory_list]
-    filtered_inventory_queryset = InventoryItem.objects.filter(id__in=available_item_ids).order_by('name')
+    filtered_inventory_queryset = InventoryItem.objects.filter(
+        id__in=available_item_ids).order_by('name')
 
+    # JS-safe JSON data for showing item quantity/condition
     available_inventory_json = mark_safe(json.dumps([
         {
             "id": item.id,
@@ -107,58 +116,502 @@ def request_item(request):
         form.fields['item'].queryset = filtered_inventory_queryset
 
         if form.is_valid():
-            try:
-                with transaction.atomic():
-                    item_request = form.save(commit=False)
-                    item = item_request.item
-                    item_locked = InventoryItem.objects.select_for_update().get(id=item.id)
+            item_request = form.save(commit=False)
+            item_request.requestor = request.user
+            item_request.name = item_request.item.name
+            item_request.save()
 
-                    existing_request = ItemRequest.objects.filter(
-                        item=item,
-                        requestor=request.user,
-                        status='Pending'
-                    ).exists()
+            # Send email notification to the requestor
+            send_mail(
+                subject='Item Request Confirmation',
+                message=(
+                    f"Dear {request.user.first_name or request.user.username},\n\n"
+                    f"Your request for item \"{item_request.item.name}\" has been successfully submitted.\n"
+                    f"We will notify you once it is reviewed or issued.\n\n"
+                    f"Thank you,\nInventory Management Team"
+                ),
+                from_email=None,  # Uses DEFAULT_FROM_EMAIL
+                recipient_list=[request.user.email],
+                fail_silently=False,
+            )
 
-                    if existing_request:
-                        form.add_error('item', "You already have a pending request for this item.")
-                        raise forms.ValidationError("Duplicate pending request.")
-
-                    if item_request.quantity > item_locked.quantity_remaining():
-                        form.add_error('quantity', f"Only {item_locked.quantity_remaining()} left in stock.")
-                        raise forms.ValidationError("Requested quantity exceeds available stock.")
-
-                    item_request.requestor = request.user
-                    item_request.name = item.name
-                    item_request.save()
-
-                    # ✅ Send email notification
-                    send_mail(
-                        subject='Item Request Confirmation',
-                        message=(
-                            f"Dear {request.user.first_name or request.user.username},\n\n"
-                            f"Your request for item \"{item_request.item.name}\" has been successfully submitted.\n"
-                            f"We will notify you once it is reviewed or issued.\n\n"
-                            f"Thank you,\nInventory Management Team"
-                        ),
-                        from_email=None,  # Uses DEFAULT_FROM_EMAIL
-                        recipient_list=[request.user.email],
-                        fail_silently=False,
-                    )
-
-                    messages.success(request, "Item request submitted successfully!")
-                    return redirect('requestor_dashboard')
-
-            except forms.ValidationError:
-                pass  # fall through to render form with errors
-            except Exception as e:
-                messages.error(request, f"Error submitting request: {str(e)}")
+            messages.success(request, "Item request submitted successfully!")
+            return redirect('requestor_dashboard')
         else:
             messages.error(request, "Please correct the errors below.")
     else:
-        form = ItemRequestForm()
+        initial_data = {}
+        if item_id_from_get and item_id_from_get.isdigit():
+            try:
+                item = InventoryItem.objects.get(id=int(item_id_from_get))
+                if item.id in available_item_ids:
+                    initial_data['item'] = item.id
+            except InventoryItem.DoesNotExist:
+                pass
+
+        form = ItemRequestForm(initial=initial_data)
         form.fields['item'].queryset = filtered_inventory_queryset
 
     return render(request, 'invent/request_item.html', {
         'form': form,
+        'available_inventory': available_inventory_list,
         'available_inventory_json': available_inventory_json,
     })
+
+
+@login_required
+def cancel_request(request, request_id):
+    item_request = get_object_or_404(
+        ItemRequest, id=request_id, requestor=request.user)
+
+    if item_request.status == 'Pending':
+        if request.method == 'POST':
+            item_request.status = 'Cancelled'
+            item_request.processed_by = request.user
+            item_request.processed_at = timezone.now()
+            item_request.save()
+            messages.success(
+                request, f"Request for '{item_request.item.name}' (ID: {request_id}) has been cancelled.")
+            return redirect('requestor_dashboard')
+        else:
+            context = {
+                'item_request': item_request
+            }
+            return render(request, 'invent/cancel_request_confirm.html', context)
+    else:
+        messages.error(
+            request, f"Request for '{item_request.item.name}' (ID: {request_id}) cannot be cancelled because its status is '{item_request.status}'.")
+        return redirect('requestor_dashboard')
+
+
+# --- Store Clerk Functionality ---
+
+@login_required
+@permission_required('invent.view_inventoryitem', raise_exception=True)
+def store_clerk_dashboard(request):
+    inventory_items = InventoryItem.objects.all()
+
+    total_inventory_items = inventory_items.aggregate(
+        total_sum=Sum('quantity_total'))['total_sum'] or 0
+    items_issued = inventory_items.aggregate(total_issued=Sum('quantity_issued'))[
+        'total_issued'] or 0
+    items_returned = inventory_items.aggregate(
+        total_returned=Sum('quantity_returned'))['total_returned'] or 0
+
+    items_for_dashboard = inventory_items.order_by('-created_at')[:5]
+
+    pending_requests_count = ItemRequest.objects.filter(
+        status='Pending').count()
+
+    context = {
+        'total_items': total_inventory_items,
+        'items_issued': items_issued,
+        'items_returned': items_returned,
+        'items': items_for_dashboard,
+        'pending_requests_count': pending_requests_count,
+    }
+    return render(request, 'invent/store_clerk_dashboard.html', context)
+
+
+@login_required
+@permission_required('invent.view_inventoryitem', raise_exception=True)
+def manage_stock(request):
+    form = InventoryItemForm()
+
+    if request.method == 'POST':
+        form = InventoryItemForm(request.POST)
+        if form.is_valid():
+            new_item = form.save(commit=False)
+            new_item.created_by = request.user
+            new_item.save()
+            messages.success(
+                request, f'Inventory item "{new_item.name}" added successfully.')
+            return redirect('manage_stock')
+        else:
+            messages.error(
+                request, "Error adding item. Please check the form.")
+
+    query = request.GET.get('q', '')
+    items = InventoryItem.objects.all().order_by('name')
+
+    if query:
+        items = items.filter(
+            Q(name__icontains=query) |
+            Q(serial_number__icontains=query) |
+            Q(category__icontains=query)
+        )
+
+    context = {
+        'form': form,
+        'items': items,
+        'query': query,
+    }
+    return render(request, 'invent/manage_stock.html', context)
+
+
+@login_required
+@permission_required('invent.change_inventoryitem', raise_exception=True)
+def edit_item(request, item_id):
+    item = get_object_or_404(InventoryItem, id=item_id)
+    if request.method == 'POST':
+        form = InventoryItemForm(request.POST, instance=item)
+        if form.is_valid():
+            if not item.created_by:
+                item.created_by = request.user
+            form.save()
+            messages.success(
+                request, f'Inventory Item "{item.name}" updated successfully!')
+            return redirect('manage_stock')
+        else:
+            messages.error(
+                request, "Error updating item. Please correct the errors below.")
+    else:
+        form = InventoryItemForm(instance=item)
+
+    context = {
+        'form': form,
+        'item': item,
+    }
+    return render(request, 'invent/edit_item.html', context)
+
+
+@login_required
+@permission_required('invent.can_issue_item', raise_exception=True)
+def issue_item(request):
+    # Fetch all requests for display in the "All Requests" tab
+    all_requests = ItemRequest.objects.all().order_by('-date_requested')
+
+    # Filter for requests that are Pending or Approved to show in the primary tab
+    pending_and_approved_requests = all_requests.filter(
+        status__in=['Pending', 'Approved'])
+
+    # Initialize the direct issue form (for cases not coming from a request)
+    form = IssueItemForm()
+
+    if request.method == 'POST':
+        action = request.POST.get('action')
+        request_id = request.POST.get('request_id')
+
+        # This block handles actions (approve, reject, issue) on existing requests
+        if action and request_id:
+            item_request = get_object_or_404(ItemRequest, id=request_id)
+            try:
+                with transaction.atomic():
+                    if action == 'approve':
+                        if item_request.status == 'Pending':  # Ensure only pending requests can be approved
+                            item_request.status = 'Approved'
+                            item_request.processed_by = request.user
+                            item_request.processed_at = timezone.now()
+                            item_request.save()
+                            messages.success(
+                                request, f"Request ID {request_id} ({item_request.item.name}) approved.")
+                        else:
+                            messages.warning(
+                                request, f"Request ID {request_id} is '{item_request.status}' and cannot be approved.")
+
+                    elif action == 'reject':
+                        # Allow rejecting from Pending or Approved states
+                        if item_request.status in ['Pending', 'Approved']:
+                            item_request.status = 'Rejected'
+                            item_request.processed_by = request.user
+                            item_request.processed_at = timezone.now()
+                            item_request.save()
+                            messages.warning(
+                                request, f"Request ID {request_id} ({item_request.item.name}) rejected.")
+                        else:
+                            messages.warning(
+                                request, f"Request ID {request_id} is '{item_request.status}' and cannot be rejected.")
+
+                    elif action == 'issue_from_request':
+                        # *** CRITICAL CHANGE HERE: Ensure status is 'Approved' to issue ***
+                        if item_request.status != 'Approved':
+                            messages.error(
+                                request, f"Cannot issue for request ID {request_id}. It must be 'Approved'. Current status: '{item_request.status}'.")
+                            # Redirect immediately on error
+                            return redirect('issue_item')
+
+                        item_to_issue_obj = item_request.item
+
+                        if item_to_issue_obj.quantity_remaining() < item_request.quantity:
+                            messages.error(
+                                request, f"Insufficient stock for '{item_to_issue_obj.name}'. Requested: {item_request.quantity}, Available: {item_to_issue_obj.quantity_remaining()}.")
+                            # Redirect immediately on error
+                            return redirect('issue_item')
+
+                        # Deduct quantity_available and update quantity_issued
+                        # It's better to manage a single 'quantity_available' field
+                        # and decrement it, rather than incrementing 'quantity_issued'
+                        # if 'quantity_remaining()' is based on 'quantity_available'.
+                        # Assuming 'quantity_remaining()' is calculated from 'quantity_in_stock - quantity_issued'
+                        # or similar, then updating 'quantity_issued' is fine.
+                        # If 'quantity_available' is the source of truth, update that.
+                        # For consistency, let's assume 'quantity_remaining()' properly reflects current stock.
+                        item_to_issue_obj.quantity_issued = F(
+                            'quantity_issued') + item_request.quantity
+                        # This performs the update
+                        item_to_issue_obj.save(
+                            update_fields=['quantity_issued'])
+
+                        StockTransaction.objects.create(
+                            item=item_to_issue_obj,
+                            transaction_type='Issue',
+                            quantity=-item_request.quantity,  # Negative for deduction
+                            issued_to=item_request.requestor.username,
+                            reason=f"Issued for request ID: {item_request.id} ({item_request.item.name})",
+                            recorded_by=request.user
+                        )
+                        item_request.status = 'Issued'
+                        item_request.processed_by = request.user
+                        item_request.processed_at = timezone.now()
+                        item_request.save()
+                        messages.success(
+                            request, f'Request ID {item_request.id} ({item_request.item.name}) issued and marked as Issued.')
+                    else:
+                        messages.error(request, "Invalid request action.")
+
+            except Exception as e:
+                messages.error(request, f"Error processing request: {e}")
+
+            return redirect('issue_item')
+
+        # This block handles the direct issue form submission (not tied to a request)
+        # This part of your view is separate and allows direct issuing.
+        # This is fine if you intend to have both functionalities.
+        form = IssueItemForm(request.POST)
+        if form.is_valid():
+            item_to_issue = form.cleaned_data['item']
+            quantity = form.cleaned_data['quantity']
+            issued_to = form.cleaned_data['issued_to']
+
+            try:
+                with transaction.atomic():
+                    if item_to_issue.quantity_remaining() < quantity:
+                        messages.error(
+                            request, f"Not enough stock for {item_to_issue.name}. Available: {item_to_issue.quantity_remaining()}.")
+                        # No redirect here, so form errors can be displayed
+                        # This means you need to pass the context again
+                        context = {
+                            'form': form,
+                            'all_requests': all_requests,
+                            'pending_and_approved_requests': pending_and_approved_requests,
+                            'approved_requests': all_requests.filter(status='Approved'),
+                            'issued_requests': all_requests.filter(status='Issued'),
+                            'rejected_requests': all_requests.filter(status='Rejected'),
+                            'pending_requests': all_requests.filter(status='Pending'),
+                        }
+                        return render(request, 'invent/issue_item.html', context)
+
+                    item_to_issue.quantity_issued = F(
+                        'quantity_issued') + quantity
+                    item_to_issue.save(update_fields=['quantity_issued'])
+
+                    StockTransaction.objects.create(
+                        item=item_to_issue,
+                        transaction_type='Issue',
+                        quantity=-quantity,  # Negative for deduction
+                        issued_to=issued_to,
+                        reason=f"Direct issue to {issued_to}. ",
+                        recorded_by=request.user
+                    )
+                messages.success(
+                    request, f'{quantity} x {item_to_issue.name} successfully issued to {issued_to}.')
+                return redirect('issue_item')
+            except Exception as e:
+                messages.error(request, f"Error issuing item: {e}")
+        else:
+            # If form is not valid, messages are usually handled by the form itself
+            # or you can add a generic error message for the form
+            messages.error(
+                request, "Please correct the errors in the direct issue form.")
+            # Important: If the form is invalid, you must render the template
+            # and pass the form back so its errors can be displayed.
+            context = {
+                'form': form,
+                'all_requests': all_requests,
+                'pending_and_approved_requests': pending_and_approved_requests,
+                'approved_requests': all_requests.filter(status='Approved'),
+                'issued_requests': all_requests.filter(status='Issued'),
+                'rejected_requests': all_requests.filter(status='Rejected'),
+                'pending_requests': all_requests.filter(status='Pending'),
+            }
+            return render(request, 'invent/issue_item.html', context)
+
+    # GET request: Render the page with the initial data
+    context = {
+        'form': form,  # Ensure the form is passed for GET requests as well
+        'all_requests': all_requests,
+        'pending_and_approved_requests': pending_and_approved_requests,
+        'approved_requests': all_requests.filter(status='Approved'),
+        'issued_requests': all_requests.filter(status='Issued'),
+        'rejected_requests': all_requests.filter(status='Rejected'),
+        'pending_requests': all_requests.filter(status='Pending'),
+    }
+    return render(request, 'invent/issue_item.html', context)
+
+
+@login_required
+def request_summary(request):
+    # Filter all requests to only those made by the logged-in requestor
+    user_requests = ItemRequest.objects.filter(requestor=request.user)
+
+    total_requests = user_requests.count()
+    pending_requests = user_requests.filter(status='Pending').count()
+    approved_requests = user_requests.filter(status='Approved').count()
+    issued_requests = user_requests.filter(status='Issued').count()
+    rejected_requests = user_requests.filter(status='Rejected').count()
+
+    requests_by_status = user_requests.values(
+        'status').annotate(count=Count('id')).order_by('status')
+
+    requests_by_item = user_requests.values('item__name').annotate(
+        count=Sum('quantity')).order_by('-count')[:10]
+
+    # No need to show top requestors to the current requestor (omit or just show current user’s total)
+    # Alternatively, show how many times *they* requested:
+    requests_by_requestor = user_requests.values(
+        'requestor__username').annotate(count=Count('id'))
+
+    context = {
+        'total_requests': total_requests,
+        'pending_requests': pending_requests,
+        'approved_requests': approved_requests,
+        'issued_requests': issued_requests,
+        'rejected_requests': rejected_requests,
+        'requests_by_status': requests_by_status,
+        'requests_by_item': requests_by_item,
+        'requests_by_requestor': requests_by_requestor,
+    }
+    return render(request, 'invent/request_summary.html', context)
+
+
+@login_required
+@permission_required('invent.change_inventoryitem', raise_exception=True)
+def adjust_stock(request):
+    if request.method == 'POST':
+        form = AdjustStockForm(request.POST)
+        if form.is_valid():
+            item = form.cleaned_data['item']
+            adjustment_quantity = form.cleaned_data['adjustment_quantity']
+            reason = form.cleaned_data['reason']
+
+            try:
+                with transaction.atomic():
+                    item.quantity_total = F(
+                        'quantity_total') + adjustment_quantity
+                    item.save(update_fields=['quantity_total'])
+
+                    transaction_type = 'Add' if adjustment_quantity > 0 else 'Remove'
+
+                    StockTransaction.objects.create(
+                        item=item,
+                        transaction_type=transaction_type,
+                        quantity=adjustment_quantity,
+                        reason=reason,
+                        recorded_by=request.user
+                    )
+                messages.success(
+                    request, f'Stock for {item.name} adjusted by {adjustment_quantity}. New total: {item.quantity_total}.')
+                return redirect('adjust_stock')
+            except Exception as e:
+                messages.error(request, f"Error adjusting stock: {e}")
+        else:
+            messages.error(
+                request, "Please correct the errors in the adjustment form.")
+    else:
+        form = AdjustStockForm()
+
+    recent_transactions = StockTransaction.objects.filter(
+        transaction_type__in=['Add', 'Remove']).order_by('-transaction_date')[:10]
+
+    context = {
+        'form': form,
+        'recent_transactions': recent_transactions,
+    }
+    return render(request, 'invent/adjust_stock.html', context)
+
+
+@login_required
+@permission_required('invent.change_inventoryitem', raise_exception=True)
+def reports(request):
+    return render(request, 'invent/reports.html')
+
+
+def reports_view(request):
+    context = {
+        'total_items': InventoryItem.objects.aggregate(total=Sum('quantity_total'))['total'] or 0,
+        'total_requests': ItemRequest.objects.count(),
+        'pending_count': ItemRequest.objects.filter(status='Pending').count(),
+        'approved_count': ItemRequest.objects.filter(status='Approved').count(),
+        'issued_count': ItemRequest.objects.filter(status='Issued').count(),
+        'rejected_count': ItemRequest.objects.filter(status='Rejected').count(),
+        'returned_count': ItemRequest.objects.filter(status='Returned').count(),
+
+        # Top 2 requested items
+        'top_requested_items': (
+            ItemRequest.objects.values('item__name')
+            .annotate(request_count=Count('id'))
+            .order_by('-request_count')[:2]
+        )
+    }
+    return render(request, 'invent/reports.html', context)
+
+
+@login_required
+@permission_required('invent.add_inventoryitem', raise_exception=True)
+def upload_inventory(request):
+    if request.method == 'POST' and request.FILES.get('excel_file'):
+        excel_file = request.FILES['excel_file']
+
+        # File extension check
+        if not excel_file.name.endswith('.xlsx'):
+            messages.error(request, "Only .xlsx files are supported.")
+            return redirect('upload_inventory')
+
+        # Save file temporarily
+        file_name = default_storage.save(
+            excel_file.name, ContentFile(excel_file.read()))
+        file_path = default_storage.path(file_name)
+
+        try:
+            wb = openpyxl.load_workbook(file_path)
+            sheet = wb.active
+
+            success_count = 0
+            skipped_count = 0
+
+            for row in sheet.iter_rows(min_row=2, values_only=True):  # Skip header row
+                name, serial, category, condition, status, total, issued, returned = row
+
+                # Skip if required fields are missing
+                if not name:
+                    skipped_count += 1
+                    continue
+
+                try:
+                    InventoryItem.objects.create(
+                        name=name.strip(),
+                        serial_number=(serial or "").strip(),
+                        category=(category or "").strip(),
+                        condition=condition or "Serviceable",
+                        status=status or "In Stock",
+                        quantity_total=int(total or 0),
+                        quantity_issued=int(issued or 0),
+                        quantity_returned=int(returned or 0),
+                        created_by=request.user
+                    )
+                    success_count += 1
+                except Exception:
+                    skipped_count += 1  # Skip row if conversion or save fails
+
+            # Feedback message
+            messages.success(
+                request,
+                f"{success_count} item(s) uploaded successfully. {skipped_count} row(s) skipped."
+            )
+            return redirect('upload_inventory')
+
+        except Exception as e:
+            messages.error(request, f"Failed to process Excel file: {e}")
+            return redirect('upload_inventory')
+
+    return render(request, 'invent/upload_inventory.html')
