@@ -176,6 +176,12 @@
                             <li class="nav-item mb-2">
                                 <a class="nav-link {% if request.resolver_match.url_name == 'issue_item' %}active{% endif %}" href="{% url 'issue_item' %}">
                                     <i class="fas fa-fw fa-share-square me-2"></i> Issue Item
+                                    {# >>> Notification badge for "Issue Item" in sidebar <<< #}
+                                    {% if pending_requests_count_for_sidebar > 0 %}
+                                        <span class="badge rounded-pill bg-danger ms-auto">
+                                            {{ pending_requests_count_for_sidebar }}
+                                        </span>
+                                    {% endif %}
                                 </a>
                             </li>
                             <li class="nav-item mb-2">
