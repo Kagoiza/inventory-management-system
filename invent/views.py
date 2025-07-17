@@ -278,38 +278,56 @@ def edit_item(request, item_id):
 @login_required
 @permission_required('invent.can_issue_item', raise_exception=True)
 def issue_item(request):
+    # Fetch all requests for display in the "All Requests" tab
     all_requests = ItemRequest.objects.all().order_by('-date_requested')
+
+    # Filter for requests that are Pending or Approved to show in the primary tab
     pending_and_approved_requests = all_requests.filter(
         status__in=['Pending', 'Approved'])
 
+    # Initialize the direct issue form (for cases not coming from a request)
     form = IssueItemForm()
 
     if request.method == 'POST':
         action = request.POST.get('action')
         request_id = request.POST.get('request_id')
 
+        # This block handles actions (approve, reject, issue) on existing requests
         if action and request_id:
             item_request = get_object_or_404(ItemRequest, id=request_id)
             try:
                 with transaction.atomic():
                     if action == 'approve':
-                        item_request.status = 'Approved'
-                        item_request.processed_by = request.user
-                        item_request.processed_at = timezone.now()
-                        item_request.save()
-                        messages.success(
-                            request, f"Request ID {request_id} ({item_request.item.name}) approved.")
+                        if item_request.status == 'Pending':  # Ensure only pending requests can be approved
+                            item_request.status = 'Approved'
+                            item_request.processed_by = request.user
+                            item_request.processed_at = timezone.now()
+                            item_request.save()
+                            messages.success(
+                                request, f"Request ID {request_id} ({item_request.item.name}) approved.")
+                        else:
+                            messages.warning(
+                                request, f"Request ID {request_id} is '{item_request.status}' and cannot be approved.")
+
                     elif action == 'reject':
-                        item_request.status = 'Rejected'
-                        item_request.processed_by = request.user
-                        item_request.processed_at = timezone.now()
-                        item_request.save()
-                        messages.warning(
-                            request, f"Request ID {request_id} ({item_request.item.name}) rejected.")
+                        # Allow rejecting from Pending or Approved states
+                        if item_request.status in ['Pending', 'Approved']:
+                            item_request.status = 'Rejected'
+                            item_request.processed_by = request.user
+                            item_request.processed_at = timezone.now()
+                            item_request.save()
+                            messages.warning(
+                                request, f"Request ID {request_id} ({item_request.item.name}) rejected.")
+                        else:
+                            messages.warning(
+                                request, f"Request ID {request_id} is '{item_request.status}' and cannot be rejected.")
+
                     elif action == 'issue_from_request':
-                        if item_request.status not in ['Pending', 'Approved']:
+                        # *** CRITICAL CHANGE HERE: Ensure status is 'Approved' to issue ***
+                        if item_request.status != 'Approved':
                             messages.error(
-                                request, f"Cannot issue for request ID {request_id}. Status is '{item_request.status}'.")
+                                request, f"Cannot issue for request ID {request_id}. It must be 'Approved'. Current status: '{item_request.status}'.")
+                            # Redirect immediately on error
                             return redirect('issue_item')
 
                         item_to_issue_obj = item_request.item
@@ -317,17 +335,27 @@ def issue_item(request):
                         if item_to_issue_obj.quantity_remaining() < item_request.quantity:
                             messages.error(
                                 request, f"Insufficient stock for '{item_to_issue_obj.name}'. Requested: {item_request.quantity}, Available: {item_to_issue_obj.quantity_remaining()}.")
+                            # Redirect immediately on error
                             return redirect('issue_item')
 
+                        # Deduct quantity_available and update quantity_issued
+                        # It's better to manage a single 'quantity_available' field
+                        # and decrement it, rather than incrementing 'quantity_issued'
+                        # if 'quantity_remaining()' is based on 'quantity_available'.
+                        # Assuming 'quantity_remaining()' is calculated from 'quantity_in_stock - quantity_issued'
+                        # or similar, then updating 'quantity_issued' is fine.
+                        # If 'quantity_available' is the source of truth, update that.
+                        # For consistency, let's assume 'quantity_remaining()' properly reflects current stock.
                         item_to_issue_obj.quantity_issued = F(
                             'quantity_issued') + item_request.quantity
+                        # This performs the update
                         item_to_issue_obj.save(
                             update_fields=['quantity_issued'])
 
                         StockTransaction.objects.create(
                             item=item_to_issue_obj,
                             transaction_type='Issue',
-                            quantity=-item_request.quantity,
+                            quantity=-item_request.quantity,  # Negative for deduction
                             issued_to=item_request.requestor.username,
                             reason=f"Issued for request ID: {item_request.id} ({item_request.item.name})",
                             recorded_by=request.user
@@ -346,7 +374,9 @@ def issue_item(request):
 
             return redirect('issue_item')
 
-        # If it's not a request action, it must be the IssueItemForm submission
+        # This block handles the direct issue form submission (not tied to a request)
+        # This part of your view is separate and allows direct issuing.
+        # This is fine if you intend to have both functionalities.
         form = IssueItemForm(request.POST)
         if form.is_valid():
             item_to_issue = form.cleaned_data['item']
@@ -358,10 +388,16 @@ def issue_item(request):
                     if item_to_issue.quantity_remaining() < quantity:
                         messages.error(
                             request, f"Not enough stock for {item_to_issue.name}. Available: {item_to_issue.quantity_remaining()}.")
+                        # No redirect here, so form errors can be displayed
+                        # This means you need to pass the context again
                         context = {
                             'form': form,
                             'all_requests': all_requests,
                             'pending_and_approved_requests': pending_and_approved_requests,
+                            'approved_requests': all_requests.filter(status='Approved'),
+                            'issued_requests': all_requests.filter(status='Issued'),
+                            'rejected_requests': all_requests.filter(status='Rejected'),
+                            'pending_requests': all_requests.filter(status='Pending'),
                         }
                         return render(request, 'invent/issue_item.html', context)
 
@@ -372,7 +408,7 @@ def issue_item(request):
                     StockTransaction.objects.create(
                         item=item_to_issue,
                         transaction_type='Issue',
-                        quantity=-quantity,
+                        quantity=-quantity,  # Negative for deduction
                         issued_to=issued_to,
                         reason=f"Direct issue to {issued_to}. ",
                         recorded_by=request.user
@@ -383,11 +419,26 @@ def issue_item(request):
             except Exception as e:
                 messages.error(request, f"Error issuing item: {e}")
         else:
+            # If form is not valid, messages are usually handled by the form itself
+            # or you can add a generic error message for the form
             messages.error(
-                request, "Please correct the errors below for the issue form.")
+                request, "Please correct the errors in the direct issue form.")
+            # Important: If the form is invalid, you must render the template
+            # and pass the form back so its errors can be displayed.
+            context = {
+                'form': form,
+                'all_requests': all_requests,
+                'pending_and_approved_requests': pending_and_approved_requests,
+                'approved_requests': all_requests.filter(status='Approved'),
+                'issued_requests': all_requests.filter(status='Issued'),
+                'rejected_requests': all_requests.filter(status='Rejected'),
+                'pending_requests': all_requests.filter(status='Pending'),
+            }
+            return render(request, 'invent/issue_item.html', context)
 
+    # GET request: Render the page with the initial data
     context = {
-        'form': form,
+        'form': form,  # Ensure the form is passed for GET requests as well
         'all_requests': all_requests,
         'pending_and_approved_requests': pending_and_approved_requests,
         'approved_requests': all_requests.filter(status='Approved'),
