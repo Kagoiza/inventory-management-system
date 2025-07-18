@@ -141,11 +141,21 @@ EMAIL_HOST_USER = 'brianobanda08@gmail.com'
 # <-- REPLACE with your actual email password or an App Password
 EMAIL_HOST_PASSWORD = 'nqkg yewg gxwq anji'
 # <-- REPLACE with your actual email address (sender)
-DEFAULT_FROM_EMAIL = 'rbumija28@gmail.com'
+DEFAULT_FROM_EMAIL = 'brianobanda08@gmail.com'
 
+# --- AUTHENTICATION AND REDIRECTION SETTINGS ---
+# The URL where requests are redirected for login, if required by login_required()
+# This should match the 'name' attribute of your login URL pattern in invent/urls.py
+LOGIN_URL = 'login' # Changed from '/custom_login/' for consistency with named URL
 
-LOGIN_URL = 'login'
+# The URL to redirect to after a user has successfully logged in.
+# This is a fallback. Your custom_login view will handle role-based redirection.
+LOGIN_REDIRECT_URL = '/' # Redirect to the root (which is requestor_dashboard in your urls.py)
 
-# <-- Session Timeout -->
-SESSION_COOKIE_AGE = 600  # <--10 minutes-->
-SESSION_EXPIRE_AT_BROWSER_CLOSE = True
+# The URL to redirect to after a user logs out.
+# It's good practice to send them back to the login page.
+LOGOUT_REDIRECT_URL = 'login'
+
+# --- SESSION TIMEOUT SETTINGS ---
+SESSION_COOKIE_AGE = 600  # <-- 20 minutes (1200 seconds) -->
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False # Changed to False for persistent sessions until timeout
