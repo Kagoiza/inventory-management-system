@@ -31,58 +31,98 @@
 
         /* General Body and Layout */
         body {
-            font-family: 'Inter', sans-serif; /* Assuming Inter font for consistency */
-            background-color: #f8f9fa; /* Light background */
+            font-family: 'Inter', sans-serif;
+            background-color: #f8f9fa;
+            margin: 0; /* Remove default body margin */
         }
-        /* Sidebar styling - now applied to the Bootstrap column classes */
+
+        /* Fixed Sidebar */
         .sidebar-wrapper {
-            background-color: #ffffff; /* White sidebar background */
-            color: #343a40; /* Dark text for sidebar */
-            border-right: 1px solid #e9ecef; /* Light border */
-            /* Removed fixed position and width - handled by Bootstrap grid */
-            /* Add min-vh-100 to ensure it takes full viewport height */
-            min-height: 100vh;
-            /* Flexbox for content distribution */
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between; /* Pushes logout/ICT Authority to bottom */
-            z-index: 1000; /* Ensure sidebar is above other content */
+            position: fixed; /* Make the sidebar fixed */
+            top: 0;
+            bottom: 0;
+            left: 0;
+            width: 250px; /* Fixed width for the sidebar */
+            background-color: #ffffff;
+            color: #343a40;
+            border-right: 1px solid #e9ecef;
+            z-index: 1030; /* Ensure it's above other content but below Bootstrap's highest z-index for modals/popovers */
+            display: flex; /* Use flexbox for content distribution */
+            flex-direction: column; /* Stack items vertically */
         }
+
+        /* Sidebar Content Area (scrollable) */
+        .sidebar-content {
+            flex-grow: 1; /* Allows this part to take up all available space */
+            overflow-y: auto; /* Enable vertical scrolling for the menu items */
+            padding-top: 1rem;
+            padding-bottom: 1rem; /* Adjust as needed */
+        }
+
         .sidebar-wrapper .nav-link {
-            color: #495057; /* Slightly lighter dark for links */
+            color: #495057;
             padding: 0.75rem 1rem;
-            border-radius: 0.5rem; /* Rounded corners for links */
+            border-radius: 0.5rem;
             transition: background-color 0.2s ease, color 0.2s ease;
         }
         .sidebar-wrapper .nav-link:hover, .sidebar-wrapper .nav-link.active {
-            background-color: #e9ecef; /* Light grey on hover/active */
-            color: #212529; /* Darker text on hover/active */
+            background-color: #e9ecef;
+            color: #212529;
         }
         .sidebar-wrapper .nav-link.text-danger {
-            color: #dc3545 !important; /* Red for logout */
+            color: #dc3545 !important;
         }
         .sidebar-wrapper .nav-link.text-danger:hover {
             background-color: #dc3545;
             color: #fff !important;
         }
-        /* Main content margin removed, handled by Bootstrap grid */
-        /* .main-content {
-            margin-left: 250px;
+
+        /* Sidebar Bottom Section */
+        .sidebar-bottom {
+            padding-top: 1rem;
+            padding-bottom: 1rem;
+            text-align: center;
+            border-top: 1px solid #e9ecef; /* Separator for bottom section */
+        }
+
+        /* Main Content Area */
+        .main-content {
+            margin-left: 250px; /* Offset main content by sidebar width */
             padding: 1.5rem;
-            flex-grow: 1;
-        } */
+            min-height: 100vh; /* Ensure main content pushes footer down if applicable */
+            overflow-x: hidden; /* Prevent horizontal scrollbar from overflowing content */
+        }
+
+        /* Mobile Navbar Toggler */
+        .mobile-navbar-toggler {
+            position: fixed;
+            top: 1rem;
+            left: 1rem;
+            z-index: 1040; /* Above sidebar, below modals */
+        }
+        .mobile-header {
+            padding: 1rem;
+            border-bottom: 1px solid #e9ecef;
+            background-color: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 1020;
+            display: none; /* Hide on larger screens */
+        }
+
+
+        /* General UI components */
         .card {
-            border-radius: 0.75rem; /* More rounded cards */
-            border: none; /* No default border */
+            border-radius: 0.75rem;
+            border: none;
         }
         .card-header {
             border-top-left-radius: 0.75rem;
             border-top-right-radius: 0.75rem;
         }
         .btn {
-            border-radius: 0.5rem; /* Rounded buttons */
+            border-radius: 0.5rem;
         }
-        /* Update outline primary button to use new primary color */
         .btn-outline-primary {
             --bs-btn-color: var(--bs-primary);
             --bs-btn-border-color: var(--bs-primary);
@@ -98,139 +138,139 @@
             --bs-gradient: none;
         }
         .badge {
-            border-radius: 0.5rem; /* Rounded badges */
+            border-radius: 0.5rem;
             padding: 0.4em 0.7em;
             font-size: 0.85em;
         }
         .table thead th {
-            border-bottom: none; /* Remove default table header border */
+            border-bottom: none;
         }
         .table tbody tr:last-child td {
-            border-bottom: none; /* Remove last row border */
+            border-bottom: none;
         }
         .alert {
             border-radius: 0.5rem;
         }
-        /* Specific form control styling for a more uniform look, now using primary-rgb */
         .form-control, .form-select {
             border-radius: 0.5rem;
             border-color: #ced4da;
             padding: 0.75rem 1rem;
         }
         .form-control:focus, .form-select:focus {
-            border-color: rgba(var(--bs-primary-rgb), 0.5); /* Use primary-rgb for focus color */
-            box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25); /* Use primary-rgb for focus shadow */
+            border-color: rgba(var(--bs-primary-rgb), 0.5);
+            box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
         }
 
         /* Responsive adjustments for smaller screens */
-        @media (max-width: 767.98px) { /* Below medium breakpoint */
+        @media (max-width: 767.98px) {
             .sidebar-wrapper {
-                position: relative; /* Sidebar becomes relative, stacks normally */
-                min-height: auto; /* Height adapts to content */
-                border-right: none;
-                border-bottom: 1px solid #e9ecef;
+                position: absolute; /* Change to absolute for mobile toggle */
+                left: -250px; /* Hide by default off-screen */
+                transition: left 0.3s ease-in-out; /* Smooth transition */
             }
-            .navbar-toggler-fixed {
-                position: fixed;
-                top: 1rem;
-                left: 1rem;
-                z-index: 1050; /* Above sidebar */
+            .sidebar-wrapper.show {
+                left: 0; /* Slide in when 'show' class is added */
+            }
+            .main-content {
+                margin-left: 0; /* No offset on small screens */
+                padding-top: 56px; /* Space for the fixed mobile header */
+            }
+            .mobile-header {
+                display: flex; /* Show mobile header */
+                justify-content: space-between;
+                align-items: center;
+                position: fixed; /* Make mobile header fixed */
+                top: 0;
+                left: 0;
+                right: 0;
+                z-index: 1020;
+            }
+            .navbar-toggler {
+                order: -1; /* Place toggler first */
             }
         }
     </style>
 </head>
 <body>
-    <div class="container-fluid"> {# Use container-fluid for full width #}
-        <div class="row">
-            {# Navbar Toggler for small screens (optional, but recommended for mobile) #}
-            <nav class="navbar navbar-expand-md d-md-none navbar-light bg-light">
-                <div class="container-fluid">
-                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
-                    <a class="navbar-brand me-auto" href="#">Store Clerk</a>
-                </div>
-            </nav>
-
-            {# Sidebar Column #}
-            {# d-md-block makes it block on medium and up, collapse makes it hidden on small unless toggled #}
-            <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar-wrapper collapse show"> {# Added 'show' to make it visible by default on larger screens #}
-                <div class="position-sticky pt-3 h-100 d-flex flex-column"> {# h-100 and d-flex flex-column added here #}
-                    <div>
-                        <div class="text-center mb-4">
-                            <h5 class="fw-bold mb-1 text-dark">{{ user.first_name|default:user.username }}</h5>
-                            <small class="text-muted">Store Clerk</small>
-                        </div>
-                        <hr class="border-secondary opacity-25" />
-                        <ul class="nav flex-column">
-                            <li class="nav-item mb-2">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'store_clerk_dashboard' %}active{% endif %}" href="{% url 'store_clerk_dashboard' %}">
-                                    <i class="fas fa-fw fa-home me-2"></i> Home
-                                </a>
-                            </li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'manage_stock' %}active{% endif %}" href="{% url 'manage_stock' %}">
-                                    <i class="fas fa-fw fa-boxes me-2"></i> Manage Stock
-                                </a>
-                            </li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'issue_item' %}active{% endif %}" href="{% url 'issue_item' %}">
-                                    <i class="fas fa-fw fa-share-square me-2"></i> Issue Item
-                                    {# >>> Notification badge for "Issue Item" in sidebar <<< #}
-                                    {% if pending_requests_count_for_sidebar > 0 %}
-                                        <span class="badge rounded-pill bg-danger ms-auto">
-                                            {{ pending_requests_count_for_sidebar }}
-                                        </span>
-                                    {% endif %}
-                                </a>
-                            </li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'adjust_stock' %}active{% endif %}" href="{% url 'adjust_stock' %}">
-                                    <i class="fas fa-fw fa-sliders-h me-2"></i> Adjust Stock
-                                </a>
-                            </li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link {% if request.resolver_match.url_name == 'upload_inventory' %}active{% endif %}" href="{% url 'upload_inventory' %}">
-                                    <i class="fas fa-fw fa-upload me-2"></i> Upload Inventory
-                                </a>
-                            </li>
-                            <li class="nav-item mb-2">
-                                <a class="nav-link" href="{% url 'reports' %}">
-                                    <i class="fas fa-fw fa-chart-line me-2"></i> Reports
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                    <div class="text-center pt-3 mt-auto"> {# mt-auto pushes this div to the bottom #}
-                        <hr class="border-secondary opacity-25" />
-                        <ul class="nav flex-column">
-                            <li class="nav-item mb-2">
-                                <a class="nav-link text-danger" href="{% url 'logout' %}">
-                                    <i class="fas fa-fw fa-right-from-bracket me-2"></i> Logout
-                                </a>
-                            </li>
-                        </ul>
-                        <small class="text-muted">Powered by ICT Authority</small>
-                    </div>
-                </div>
-            </nav>
-
-            {# Main Content Column #}
-            <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4">
-                {# Add a top padding for small screens to clear the fixed navbar-toggler if implemented #}
-                <div class="d-md-none pt-4"></div>
-                {% block content %}
-                {# Content from child templates will be inserted here #}
-                {% endblock %}
-            </main>
-        </div>
+    {# Mobile Navbar Toggler and Header (Visible only on small screens) #}
+    <div class="mobile-header d-md-none">
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <a class="navbar-brand me-auto ps-3" href="#">Store Clerk</a>
     </div>
+
+    {# Sidebar #}
+    <nav id="sidebarMenu" class="sidebar-wrapper collapse d-md-block show"></nav>
+        <div class="sidebar-content">
+            <div class="text-center mb-4 pt-3"> {# Added pt-3 for consistency with previous padding #}
+                <h5 class="fw-bold mb-1 text-dark">{{ user.first_name|default:user.username }}</h5>
+                <small class="text-muted">Store Clerk</small>
+            </div>
+            <hr class="border-secondary opacity-25" />
+            <ul class="nav flex-column">
+                <li class="nav-item mb-2">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'store_clerk_dashboard' %}active{% endif %}" href="{% url 'store_clerk_dashboard' %}">
+                        <i class="fas fa-fw fa-home me-2"></i> Home
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'manage_stock' %}active{% endif %}" href="{% url 'manage_stock' %}">
+                        <i class="fas fa-fw fa-boxes me-2"></i> Manage Stock
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'issue_item' %}active{% endif %}" href="{% url 'issue_item' %}">
+                        <i class="fas fa-fw fa-share-square me-2"></i> Issue Item
+                        {% if pending_requests_count_for_sidebar > 0 %}
+                            <span class="badge rounded-pill bg-danger ms-auto">
+                                {{ pending_requests_count_for_sidebar }}
+                            </span>
+                        {% endif %}
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'adjust_stock' %}active{% endif %}" href="{% url 'adjust_stock' %}">
+                        <i class="fas fa-fw fa-sliders-h me-2"></i> Adjust Stock
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link {% if request.resolver_match.url_name == 'upload_inventory' %}active{% endif %}" href="{% url 'upload_inventory' %}">
+                        <i class="fas fa-fw fa-upload me-2"></i> Upload Inventory
+                    </a>
+                </li>
+                <li class="nav-item mb-2">
+                    <a class="nav-link" href="{% url 'reports' %}">
+                        <i class="fas fa-fw fa-chart-line me-2"></i> Reports
+                    </a>
+                </li>
+            </ul>
+        </div>
+        {# Sidebar Bottom Section (Logout & Copyright) #}
+        <div class="sidebar-bottom">
+            <ul class="nav flex-column mb-2"> {# mb-2 to prevent margin from adding extra space below last item #}
+                <li class="nav-item">
+                    <a class="nav-link text-danger" href="{% url 'logout' %}">
+                        <i class="fas fa-fw fa-right-from-bracket me-2"></i> Logout
+                    </a>
+                </li>
+            </ul>
+            <small class="text-muted">Powered by ICT Authority</small>
+        </div>
+    </nav>
+
+    {# Main Content Area #}
+    <main class="main-content">
+        {% block content %}
+        {# Content from child templates will be inserted here #}
+        {% endblock %}
+    </main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
-    {% block extra_js %}{% endblock %} {# This block is important for page-specific JS #}
+    {% block extra_js %}{% endblock %}
 </body>
 </html>

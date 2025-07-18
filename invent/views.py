@@ -1,14 +1,13 @@
 from django.db.models import Q
-from django.core.mail import send_mail  # Add this at the top
+from django.core.mail import send_mail
 from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, UserCreationForm # Add UserCreationForm here
 from .forms import CustomCreationForm
 from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required, permission_required
 from django.contrib import messages
 from django.db.models import Sum, F, Count, Q
 from django.db import transaction
-# Keep HttpResponse for other potential uses, or remove if truly not needed elsewhere
 from django.http import HttpResponse
 from django.utils import timezone
 import json
@@ -29,12 +28,12 @@ from django.contrib import messages
 
 def register(request):
     if request.method == 'POST':
+        # Ensure you use CustomCreationForm if that's what you intend
         form = CustomCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)
-            messages.success(request, "Registration successful.")
-            return redirect('requestor_dashboard')
+            messages.success(request, "Registration successful. Please log in.")
+            return redirect('login')
     else:
         form = CustomCreationForm()
     return render(request, 'invent/register.html', {'form': form})
