@@ -201,9 +201,9 @@
     </div>
 
     {# Sidebar #}
-    <nav id="sidebarMenu" class="sidebar-wrapper collapse d-md-block show"></nav>
+    <nav id="sidebarMenu" class="sidebar-wrapper collapse d-md-block show">
         <div class="sidebar-content">
-            <div class="text-center mb-4 pt-3"> {# Added pt-3 for consistency with previous padding #}
+            <div class="text-center mb-4 pt-3">
                 <h5 class="fw-bold mb-1 text-dark">{{ user.first_name|default:user.username }}</h5>
                 <small class="text-muted">Store Clerk</small>
             </div>
@@ -248,7 +248,7 @@
         </div>
         {# Sidebar Bottom Section (Logout & Copyright) #}
         <div class="sidebar-bottom">
-            <ul class="nav flex-column mb-2"> {# mb-2 to prevent margin from adding extra space below last item #}
+            <ul class="nav flex-column mb-2">
                 <li class="nav-item">
                     <a class="nav-link text-danger" href="{% url 'logout' %}">
                         <i class="fas fa-fw fa-right-from-bracket me-2"></i> Logout
