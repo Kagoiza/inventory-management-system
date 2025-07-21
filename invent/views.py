@@ -636,6 +636,7 @@ def total_requests(request):
     }
     return render(request, 'invent/total_requests.html', context)
 
+#Export
 def export_total_requests(request):
     import openpyxl
     from openpyxl.utils import get_column_letter
@@ -677,3 +678,46 @@ def export_total_requests(request):
     response['Content-Disposition'] = 'attachment; filename=total_requests.xlsx'
     wb.save(response)
     return response
+
+def export_inventory_items(request):
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=inventory_items.xlsx'
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Inventory Items"
+
+    # Header row
+    ws.append([
+        'Item ID',
+        'Item Name',
+        'Serial Number',
+        'Category',
+        'Condition',
+        'Status',
+        'Total Qty',
+        'Issued Qty',
+        'Returned Qty',
+        'Available Qty',
+    ])
+
+    # Data rows
+    for item in InventoryItem.objects.all():
+        ws.append([
+            item.id,
+            item.name,
+            item.serial_number if hasattr(item, 'serial_number') else '',
+            item.category if item.category else 'N/A',
+            item.condition if hasattr(item, 'condition') else 'N/A',
+            item.status if hasattr(item, 'status') else 'N/A',
+            item.quantity_total,
+            item.quantity_issued,
+            item.quantity_returned,
+            item.quantity_total - item.quantity_issued + item.quantity_returned  # Available Qty
+        ])
+
+    wb.save(response)
+    return response
+

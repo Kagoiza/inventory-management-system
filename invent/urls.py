@@ -20,6 +20,7 @@ urlpatterns = [
     path('manage_stock/', views.manage_stock, name='manage_stock'),
     path('edit_item/<int:item_id>/', views.edit_item, name='edit_item'),
     path('reports/', views.reports_view, name='reports'),
+    path('reports/export/inventory-items/', views.export_inventory_items, name='export_inventory_items'),
 
     # NEW Functionalities (Issue and Adjust)
 
