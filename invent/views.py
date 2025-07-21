@@ -620,36 +620,60 @@ def upload_inventory(request):
 # <-- Reports Section ---
 
 def total_requests(request):
-    all_requests = ItemRequest.objects.all().order_by('-date_requested')
-    paginator = Paginator(all_requests, 10)  # Show 10 requests per page
+    status_filter = request.GET.get('status')
+    requests = ItemRequest.objects.all()
+
+    if status_filter:
+        requests = requests.filter(status=status_filter)
+
+    paginator = Paginator(requests.order_by('-date_requested'), 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
-    return render(request, 'invent/total_requests.html', {'page_obj': page_obj})
+
+    context = {
+        'page_obj': page_obj,
+        'status_filter': status_filter,
+    }
+    return render(request, 'invent/total_requests.html', context)
 
 def export_total_requests(request):
-    response = HttpResponse(
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
-    response['Content-Disposition'] = 'attachment; filename=total_requests.xlsx'
+    import openpyxl
+    from openpyxl.utils import get_column_letter
+    from django.http import HttpResponse
 
-    wb = Workbook()
+    status_filter = request.GET.get('status')
+    queryset = ItemRequest.objects.all()
+
+    if status_filter:
+        queryset = queryset.filter(status=status_filter)
+
+    # Create workbook
+    wb = openpyxl.Workbook()
     ws = wb.active
-    ws.title = "Total Requests"
+    ws.title = "Item Requests"
 
-    # Headers
-    ws.append(['Request ID', 'Item', 'Quantity', 'Status', 'Requested By', 'Request Date'])
+    # Define headers
+    headers = ['Requested By', 'Item', 'Quantity', 'Date Requested', 'Status']
+    ws.append(headers)
 
-    # Data rows
-    for req in ItemRequest.objects.all():
+    # Add data rows
+    for item in queryset:
         ws.append([
-            req.id,
-            req.item.name,
-            req.quantity,
-            req.status,
-            req.requestor.username if req.requestor else 'N/A',
-            req.date_requested.strftime('%Y-%m-%d') if req.date_requested else ''
+            item.requestor.username,
+            item.item.name,
+            item.quantity,
+            item.date_requested.strftime('%Y-%m-%d'),
+            item.status
         ])
 
+    # Adjust column widths (optional)
+    for i, col in enumerate(headers, 1):
+        ws.column_dimensions[get_column_letter(i)].width = 20
+
+    # Set up HTTP response
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    )
+    response['Content-Disposition'] = 'attachment; filename=total_requests.xlsx'
     wb.save(response)
     return response
