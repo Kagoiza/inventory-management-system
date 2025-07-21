@@ -172,9 +172,12 @@
         <div class="card-tile bg-blue">
             Total Items<br><strong>{{ total_items }}</strong>
         </div>
-        <div class="card-tile bg-blue">
-            Total Requests<br><strong>{{ total_requests }}</strong>
-        </div>
+        <a href="{% url 'total_requests' %}" style="text-decoration: none;">
+            <div class="card-tile bg-blue">
+                Total Requests<br><strong>{{ total_requests }}</strong>
+            </div>
+        </a>
+
         <div class="card-tile bg-orange">
             Pending<br><strong>{{ pending_count }}</strong>
         </div>
