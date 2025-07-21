@@ -27,5 +27,10 @@ urlpatterns = [
     path('adjust_stock/', views.adjust_stock, name='adjust_stock'),
     path('upload-inventory/', views.upload_inventory, name='upload_inventory'),
 
+    # Reports
+    path('reports/total-requests/', views.total_requests, name='total_requests'),
+    path('reports/export/total-requests/', views.export_total_requests, name='export_total_requests'),
+
+
 
 ]

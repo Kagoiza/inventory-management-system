@@ -20,10 +20,12 @@ from .forms import InventoryItemForm
 from .forms import IssueItemForm
 from .forms import AdjustStockForm
 import openpyxl
+from openpyxl import Workbook
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from django.contrib.auth.models import Group
 from django.contrib import messages
+from django.core.paginator import Paginator
 
 
 def register(request):
@@ -614,3 +616,40 @@ def upload_inventory(request):
             return redirect('upload_inventory')
 
     return render(request, 'invent/upload_inventory.html')
+
+# <-- Reports Section ---
+
+def total_requests(request):
+    all_requests = ItemRequest.objects.all().order_by('-date_requested')
+    paginator = Paginator(all_requests, 10)  # Show 10 requests per page
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    return render(request, 'invent/total_requests.html', {'page_obj': page_obj})
+
+def export_total_requests(request):
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = 'attachment; filename=total_requests.xlsx'
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Total Requests"
+
+    # Headers
+    ws.append(['Request ID', 'Item', 'Quantity', 'Status', 'Requested By', 'Request Date'])
+
+    # Data rows
+    for req in ItemRequest.objects.all():
+        ws.append([
+            req.id,
+            req.item.name,
+            req.quantity,
+            req.status,
+            req.requestor.username if req.requestor else 'N/A',
+            req.date_requested.strftime('%Y-%m-%d') if req.date_requested else ''
+        ])
+
+    wb.save(response)
+    return response

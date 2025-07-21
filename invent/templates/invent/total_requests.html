@@ -1,0 +1,79 @@
+{% extends 'invent/base_store_clerk.html' %}
+
+{% block title %}All Requests{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3">All Requests</h2>
+
+    <div class="d-flex justify-content-end mb-3">
+        <a href="{% url 'export_total_requests' %}" class="btn btn-success">
+            <i class="fas fa-file-excel"></i> Export to Excel
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-light">
+                <tr>
+                    <th>#</th>
+                    <th>Requested By</th>
+                    <th>Item</th>
+                    <th>Quantity</th>
+                    <th>Date Requested</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for request in page_obj %}
+                <tr>
+                    <td>{{ forloop.counter0|add:page_obj.start_index }}</td>
+                    <td>{{ request.requestor.username }}</td>
+                    <td>{{ request.item.name }}</td>
+                    <td>{{ request.quantity }}</td>
+                    <td>{{ request.date_requested }}</td>
+                    <td>{{ request.status }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6">No requests found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination controls -->
+    <div class="pagination mt-4" style="text-align: center;">
+        <ul style="list-style: none; padding: 0; display: inline-flex; gap: 10px;">
+            {% if page_obj.has_previous %}
+                <li>
+                    <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-chevron-left"></i>
+                    </a>
+                </li>
+            {% endif %}
+
+            {% for num in page_obj.paginator.page_range %}
+                {% if page_obj.number == num %}
+                    <li>
+                        <span class="btn btn-primary">{{ num }}</span>
+                    </li>
+                {% else %}
+                    <li>
+                        <a href="?page={{ num }}" class="btn btn-outline-secondary">{{ num }}</a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+
+            {% if page_obj.has_next %}
+                <li>
+                    <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-chevron-right"></i>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </div>
+</div>
+{% endblock %}
