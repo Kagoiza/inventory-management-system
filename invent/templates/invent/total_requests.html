@@ -6,12 +6,28 @@
 <div class="container mt-4">
     <h2 class="mb-3">All Requests</h2>
 
-    <div class="d-flex justify-content-end mb-3">
-        <a href="{% url 'export_total_requests' %}" class="btn btn-success">
+    <div class="d-flex justify-content-between mb-3 align-items-center">
+        <!-- Filter form -->
+        <form method="get" class="d-flex align-items-center" style="gap: 10px;">
+            <label for="status" class="form-label mb-0">Filter by Status:</label>
+            <select name="status" id="status" class="form-select" onchange="this.form.submit()" style="width: 200px;">
+                <option value="">All</option>
+                <option value="Pending" {% if status_filter == 'Pending' %}selected{% endif %}>Pending</option>
+                <option value="Approved" {% if status_filter == 'Approved' %}selected{% endif %}>Approved</option>
+                <option value="Issued" {% if status_filter == 'Issued' %}selected{% endif %}>Issued</option>
+                <option value="Rejected" {% if status_filter == 'Rejected' %}selected{% endif %}>Rejected</option>
+                <option value="Returned" {% if status_filter == 'Returned' %}selected{% endif %}>Returned</option>
+            </select>
+        </form>
+
+        <!-- Export button -->
+        <a href="{% url 'export_total_requests' %}?{% if status_filter %}status={{ status_filter }}{% endif %}" class="btn btn-success">
             <i class="fas fa-file-excel"></i> Export to Excel
         </a>
+
     </div>
 
+    <!-- Requests table -->
     <div class="table-responsive">
         <table class="table table-bordered table-striped">
             <thead class="table-light">
@@ -48,7 +64,7 @@
         <ul style="list-style: none; padding: 0; display: inline-flex; gap: 10px;">
             {% if page_obj.has_previous %}
                 <li>
-                    <a href="?page={{ page_obj.previous_page_number }}" class="btn btn-outline-secondary">
+                    <a href="?page={{ page_obj.previous_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-outline-secondary">
                         <i class="fas fa-chevron-left"></i>
                     </a>
                 </li>
@@ -56,19 +72,17 @@
 
             {% for num in page_obj.paginator.page_range %}
                 {% if page_obj.number == num %}
-                    <li>
-                        <span class="btn btn-primary">{{ num }}</span>
-                    </li>
+                    <li><span class="btn btn-primary">{{ num }}</span></li>
                 {% else %}
                     <li>
-                        <a href="?page={{ num }}" class="btn btn-outline-secondary">{{ num }}</a>
+                        <a href="?page={{ num }}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-outline-secondary">{{ num }}</a>
                     </li>
                 {% endif %}
             {% endfor %}
 
             {% if page_obj.has_next %}
                 <li>
-                    <a href="?page={{ page_obj.next_page_number }}" class="btn btn-outline-secondary">
+                    <a href="?page={{ page_obj.next_page_number }}{% if status_filter %}&status={{ status_filter }}{% endif %}" class="btn btn-outline-secondary">
                         <i class="fas fa-chevron-right"></i>
                     </a>
                 </li>
