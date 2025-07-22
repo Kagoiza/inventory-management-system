@@ -19,19 +19,24 @@ urlpatterns = [
          name='store_clerk_dashboard'),
     path('manage_stock/', views.manage_stock, name='manage_stock'),
     path('edit_item/<int:item_id>/', views.edit_item, name='edit_item'),
+    # This maps to reports_view
     path('reports/', views.reports_view, name='reports'),
-    path('reports/export/inventory-items/', views.export_inventory_items, name='export_inventory_items'),
+    path('reports/export/inventory-items/',
+         views.export_inventory_items, name='export_inventory_items'),
 
     # NEW Functionalities (Issue and Adjust)
-
     path('issue-item/', views.issue_item, name='issue_item'),
     path('adjust_stock/', views.adjust_stock, name='adjust_stock'),
     path('upload-inventory/', views.upload_inventory, name='upload_inventory'),
 
+    # NEW: Return Logic Paths
+    path('returns/', views.list_issued_requests_for_return,
+         name='list_issued_requests_for_return'),
+    path('returns/process/<int:request_id>/',
+         views.process_return_for_request, name='process_return_for_request'),
+
     # Reports
     path('reports/total-requests/', views.total_requests, name='total_requests'),
-    path('reports/export/total-requests/', views.export_total_requests, name='export_total_requests'),
-
-
-
+    path('reports/export/total-requests/',
+         views.export_total_requests, name='export_total_requests'),
 ]

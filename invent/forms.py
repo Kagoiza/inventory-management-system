@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.db.models import F  # Import F expression for queryset filtering
 from .models import ItemRequest, InventoryItem, StockTransaction
 
 
@@ -41,6 +42,7 @@ class ItemRequestForm(forms.ModelForm):
                 )
 
         return cleaned_data
+
 
 class InventoryItemForm(forms.ModelForm):
     class Meta:
@@ -117,12 +119,12 @@ class AdjustStockForm(forms.Form):
     )
     adjustment_quantity = forms.IntegerField(
         widget=forms.NumberInput(attrs={
-                                 'class': 'form-control', 'placeholder': 'Quantity to add/remove (e.g., 5 or -3)'}),
+            'class': 'form-control', 'placeholder': 'Quantity to add/remove (e.g., 5 or -3)'}),
         help_text="Enter a positive number to add stock, or a negative number to remove stock."
     )
     reason = forms.CharField(
         widget=forms.TextInput(attrs={
-                               'class': 'form-control', 'placeholder': 'Reason for adjustment (e.g., Damage, Audit, New Stock Arrival)'})
+            'class': 'form-control', 'placeholder': 'Reason for adjustment (e.g., Damage, Audit, New Stock Arrival)'})
     )
     notes = forms.CharField(
         required=False,
@@ -137,7 +139,72 @@ class AdjustStockForm(forms.Form):
 
         if item and adjustment_quantity is not None:
             if (item.quantity_total + adjustment_quantity) < 0:
-                raise forms.ValidationError(
+                self.add_error(
+                    'adjustment_quantity',  # Attach error to specific field
                     f"Adjustment would result in negative total stock. Current total: {item.quantity_total}."
                 )
         return cleaned_data
+
+
+# --- NEW FORMS FOR RETURN LOGIC ---
+
+class ReturnItemForm(forms.Form):
+    """
+    Form for processing the return of items for a specific ItemRequest.
+    The item_request instance is passed during initialization to set max_value.
+    """
+    returned_quantity = forms.IntegerField(
+        min_value=1,
+        label="Quantity to Return",
+        widget=forms.NumberInput(attrs={'class': 'form-control'}),
+        help_text="Enter the number of items being returned for this request."
+    )
+    reason = forms.CharField(
+        widget=forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+        required=False,
+        label="Reason for Return",
+        help_text="Optional: Why are these items being returned? (e.g., Damaged, No longer needed)"
+    )
+
+    def __init__(self, *args, **kwargs):
+        # Pop the item_request instance from kwargs before calling super()
+        self.item_request = kwargs.pop('item_request', None)
+        super().__init__(*args, **kwargs)
+
+        if self.item_request:
+            max_return_quantity = self.item_request.quantity_to_be_returned()
+            self.fields['returned_quantity'].max_value = max_return_quantity
+            self.fields['returned_quantity'].help_text += f" (Max: {max_return_quantity})"
+            if max_return_quantity <= 0:
+                self.fields['returned_quantity'].widget.attrs['readonly'] = True
+                self.fields['returned_quantity'].help_text = "No more items to return for this request."
+                # Set initial to 0 if no more to return
+                self.fields['returned_quantity'].initial = 0
+
+    def clean_returned_quantity(self):
+        returned_quantity = self.cleaned_data['returned_quantity']
+        if self.item_request:
+            max_return_quantity = self.item_request.quantity_to_be_returned()
+            if returned_quantity > max_return_quantity:
+                raise forms.ValidationError(
+                    f"You cannot return more than the remaining issued quantity ({max_return_quantity})."
+                )
+        return returned_quantity
+
+
+class SelectRequestForReturnForm(forms.Form):
+    """
+    Form to select an ItemRequest that has been issued and is eligible for return.
+    """
+    item_request = forms.ModelChoiceField(
+        # Filter for requests that are 'Issued' and have a quantity_to_be_returned > 0
+        queryset=ItemRequest.objects.filter(
+            status='Issued'
+        ).exclude(
+            # Exclude if original quantity <= returned quantity
+            quantity__lte=F('returned_quantity')
+        ).order_by('date_issued'),  # Order by issue date or request date
+        label="Select Issued Request",
+        empty_label="--- Select an Issued Request ---",
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
