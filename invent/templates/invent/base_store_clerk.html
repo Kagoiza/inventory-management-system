@@ -1,4 +1,3 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -27,6 +26,12 @@
 
             --bs-link-color: var(--bs-primary);
             --bs-link-hover-color: #157347;
+
+            /* Sidebar specific variables */
+            --sidebar-bg: white;
+            --sidebar-text: #0f0f0f;
+            --sidebar-active: #178526;
+            --sidebar-hover: #15b33c; /* This variable is already defined here */
         }
 
         /* General Body and Layout */
@@ -43,8 +48,8 @@
             bottom: 0;
             left: 0;
             width: 250px; /* Fixed width for the sidebar */
-            background-color: #ffffff;
-            color: #343a40;
+            background-color: var(--sidebar-bg); /* Use variable for consistency */
+            color: var(--sidebar-text); /* Use variable for consistency */
             border-right: 1px solid #e9ecef;
             z-index: 1030; /* Ensure it's above other content but below Bootstrap's highest z-index for modals/popovers */
             display: flex; /* Use flexbox for content distribution */
@@ -60,14 +65,18 @@
         }
 
         .sidebar-wrapper .nav-link {
-            color: #495057;
+            color: var(--sidebar-text); /* Use variable for consistency */
             padding: 0.75rem 1rem;
             border-radius: 0.5rem;
             transition: background-color 0.2s ease, color 0.2s ease;
         }
-        .sidebar-wrapper .nav-link:hover, .sidebar-wrapper .nav-link.active {
-            background-color: #e9ecef;
-            color: #212529;
+        .sidebar-wrapper .nav-link:hover { /* This is where you apply the hover color */
+            background-color: var(--sidebar-hover); /* Apply the --sidebar-hover variable here */
+            color: #212529; /* Adjust text color on hover if needed, or make it white for better contrast */
+        }
+        .sidebar-wrapper .nav-link.active {
+            background-color: var(--sidebar-active); /* Apply the --sidebar-active variable here */
+            color: #fff; /* Ensure active link text is white for contrast */
         }
         .sidebar-wrapper .nav-link.text-danger {
             color: #dc3545 !important;
@@ -91,6 +100,7 @@
             padding: 1.5rem;
             min-height: 100vh; /* Ensure main content pushes footer down if applicable */
             overflow-x: hidden; /* Prevent horizontal scrollbar from overflowing content */
+            transition: margin-left 0.3s ease-in-out; /* Add transition for smooth mobile toggle */
         }
 
         /* Mobile Navbar Toggler */
@@ -99,6 +109,7 @@
             top: 1rem;
             left: 1rem;
             z-index: 1040; /* Above sidebar, below modals */
+            /* Removed d-md-none, visibility handled by mobile-header */
         }
         .mobile-header {
             padding: 1rem;
@@ -107,7 +118,7 @@
             position: sticky;
             top: 0;
             z-index: 1020;
-            display: none; /* Hide on larger screens */
+            display: none; /* Hide on larger screens, show on small screens via media query */
         }
 
 
@@ -164,7 +175,7 @@
         /* Responsive adjustments for smaller screens */
         @media (max-width: 767.98px) {
             .sidebar-wrapper {
-                position: absolute; /* Change to absolute for mobile toggle */
+                position: fixed; /* Keep it fixed so it slides over content */
                 left: -250px; /* Hide by default off-screen */
                 transition: left 0.3s ease-in-out; /* Smooth transition */
             }
@@ -184,6 +195,12 @@
                 left: 0;
                 right: 0;
                 z-index: 1020;
+                background-color: #fff; /* Ensure it has a background */
+                box-shadow: 0 2px 4px rgba(0,0,0,.05); /* Optional subtle shadow */
+            }
+            .mobile-navbar-toggler {
+                display: block; /* Ensure toggler is visible */
+                margin-left: 1rem; /* Adjust position */
             }
             .navbar-toggler {
                 order: -1; /* Place toggler first */
@@ -194,14 +211,14 @@
 <body>
     {# Mobile Navbar Toggler and Header (Visible only on small screens) #}
     <div class="mobile-header d-md-none">
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
+        <button class="navbar-toggler mobile-navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebarMenu" aria-controls="sidebarMenu" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <a class="navbar-brand me-auto ps-3" href="#">Store Clerk</a>
+        <a class="navbar-brand me-auto ps-3 text-dark" href="#">Store Clerk</a>
     </div>
 
     {# Sidebar #}
-    <nav id="sidebarMenu" class="sidebar-wrapper collapse d-md-block show">
+    <nav id="sidebarMenu" class="sidebar-wrapper collapse d-md-block"> {# Removed 'show' class here to start collapsed on mobile #}
         <div class="sidebar-content">
             <div class="text-center mb-4 pt-3">
                 <h5 class="fw-bold mb-1 text-dark">{{ user.first_name|default:user.username }}</h5>
@@ -255,7 +272,7 @@
         <div class="sidebar-bottom">
             <ul class="nav flex-column mb-2">
                 <li class="nav-item">
-                    <a class="nav-link text-danger" href="{% url 'logout' %}">
+                    <a class="nav-link text-danger logout-link" href="{% url 'logout' %}">
                         <i class="fas fa-fw fa-right-from-bracket me-2"></i> Logout
                     </a>
                 </li>
@@ -276,6 +293,16 @@
     <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-close alerts after 5 seconds
+            setTimeout(function () {
+                document.querySelectorAll('.alert').forEach(function (alert) {
+                    new bootstrap.Alert(alert).close();
+                });
+            }, 5000);
+        });
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
-</html>
+</html> 
