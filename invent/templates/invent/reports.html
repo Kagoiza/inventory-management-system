@@ -50,6 +50,18 @@
         text-align: center;
         font-size: 1rem;
         font-weight: 500;
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .card-tile:hover {
+        transform: translateY(-3px);
+    }
+
+    .card-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
     }
 
     .bg-blue { background-color: #0d61fd; }
@@ -125,6 +137,18 @@
         text-align: center;
         font-weight: 600;
         font-size: 1rem;
+        cursor: pointer;
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .card-tile:hover {
+        transform: translateY(-3px);
+    }
+
+    .card-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
     }
 
     .bg-blue { background-color: #0d6efd; }
@@ -169,30 +193,46 @@
 
     <!-- Cards -->
     <div class="card-container">
-        <div class="card-tile bg-blue">
-            Total Items<br><strong>{{ total_items }}</strong>
-        </div>
-        <a href="{% url 'total_requests' %}" style="text-decoration: none;">
+        <a href="{% url 'inventory_list' %}" class="card-link">
+            <div class="card-tile bg-blue">
+        Total Items<br><strong>{{ total_items }}</strong>
+            </div>
+        </a>
+        <a href="{% url 'total_requests' %}?status=" class="card-link">
             <div class="card-tile bg-blue">
                 Total Requests<br><strong>{{ total_requests }}</strong>
             </div>
         </a>
 
-        <div class="card-tile bg-orange">
-            Pending<br><strong>{{ pending_count }}</strong>
-        </div>
-        <div class="card-tile bg-green">
-            Approved<br><strong>{{ approved_count }}</strong>
-        </div>
-        <div class="card-tile bg-lightblue">
-            Issued<br><strong>{{ issued_count }}</strong>
-        </div>
-        <div class="card-tile bg-red">
-            Rejected<br><strong>{{ rejected_count }}</strong>
-        </div>
-        <div class="card-tile bg-green">
-            Returned<br><strong>{{ returned_count }}</strong>
-        </div>
+        <a href="{% url 'total_requests' %}?status=Pending" class="card-link">
+            <div class="card-tile bg-orange">
+                Pending<br><strong>{{ pending_count }}</strong>
+            </div>
+        </a>
+
+        <a href="{% url 'total_requests' %}?status=Approved" class="card-link">
+            <div class="card-tile bg-green">
+                Approved<br><strong>{{ approved_count }}</strong>
+            </div>
+        </a>
+
+        <a href="{% url 'total_requests' %}?status=Issued" class="card-link">
+            <div class="card-tile bg-lightblue">
+                Issued<br><strong>{{ issued_count }}</strong>
+            </div>
+        </a>
+
+        <a href="{% url 'total_requests' %}?status=Rejected" class="card-link">
+            <div class="card-tile bg-red">
+                Rejected<br><strong>{{ rejected_count }}</strong>
+            </div>
+        </a>
+
+        <a href="{% url 'total_requests' %}?status=Fully Returned" class="card-link">
+            <div class="card-tile bg-green">
+                Returned<br><strong>{{ fully_returned_count }}</strong>
+            </div>
+        </a>
     </div>
 
     <!-- Top Requested Items Table -->

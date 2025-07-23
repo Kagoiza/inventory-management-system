@@ -239,6 +239,34 @@ def store_clerk_dashboard(request):
     }
     return render(request, 'invent/store_clerk_dashboard.html', context)
 
+# invent/views.py
+
+@login_required
+@permission_required('invent.view_inventoryitem', raise_exception=True)
+def inventory_list_view(request):
+    """
+    Displays a list of all inventory items with search and pagination.
+    """
+    query = request.GET.get('q', '')
+    items = InventoryItem.objects.all().order_by('name')
+
+    if query:
+        items = items.filter(
+            Q(name__icontains=query) |
+            Q(serial_number__icontains=query) |
+            Q(category__icontains=query) 
+        )                                    
+
+    # Add pagination
+    paginator = Paginator(items, 50)  # Show 50 items per page
+    page_number = request.GET.get('page')
+    page_obj  = paginator.get_page(page_number) 
+
+    context = {
+        'page_obj': page_obj,  # Now passing the paginated object as 'page_obj'
+        'query': query,
+    }
+    return render(request, 'invent/list_inventory_items.html', context)
 
 @login_required
 @permission_required('invent.view_inventoryitem', raise_exception=True)
