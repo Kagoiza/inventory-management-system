@@ -288,6 +288,7 @@
 </head>
 <body class="bg-light">
 <div class="d-flex">
+   <!-- Sidebar -->
   <div class="sidebar vh-100 p-3 d-flex flex-column justify-content-between">
     <div>
       <div class="text-center mb-4 pt-3">
@@ -313,21 +314,24 @@
       </ul>
     </div>
 
-    <div>
-      <hr class="border-secondary opacity-25" />
-      <ul class="nav flex-column">
-        <li class="nav-item mb-2">
-          <a class="nav-link text-danger logout-link" href="{% url 'logout' %}">
-            <i class="fas fa-right-from-bracket"></i> <span>Logout</span>
-          </a>
-        </li>
-      </ul>
-      <div class="text-center">
+    <!-- Sidebar Footer -->
+    <footer class="text-center px-2">  <!-- Added px-2 for padding -->
+      <hr class="border-secondary opacity-25 mx-auto" style="width: 80%">
+      
+      <!-- Centered Logout Button -->
+      <div class="d-flex justify-content-center">  <!-- Flex container to center the button -->
+        <a class="nav-link logout-link text-center" href="{% url 'logout' %}" style="width: auto;">  <!-- Added text-center and width:auto -->
+          <i class="fas fa-right-from-bracket me-2"></i> <span>Logout</span>
+        </a>
+      </div>
+      
+      <div class="mt-2">  <!-- Added margin-top -->
         <small class="text-muted">Powered by ICT Authority</small>
       </div>
-    </div>
+    </footer>
   </div>
 
+  
   <main class="main-content w-100">
     {% for message in messages %}
       <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
