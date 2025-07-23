@@ -275,6 +275,28 @@ def manage_stock(request):
     }
     return render(request, 'invent/manage_stock.html', context)
 
+@login_required
+@permission_required('invent.view_inventoryitem', raise_exception=True) # Assuming 'invent.view_inventoryitem' is the correct permission
+def inventory_list_view(request):
+    """
+    Renders a standalone page for viewing and searching all inventory items.
+    """
+    query = request.GET.get('q', '')
+    items = InventoryItem.objects.all().order_by('name')
+
+    if query:
+        items = items.filter(
+            Q(name__icontains=query) |
+            Q(serial_number__icontains=query) |
+            Q(category__icontains=query)
+        )
+
+    context = {
+        'items': items,
+        'query': query,
+    }
+    return render(request, 'invent/list_inventory_items.html', context)
+
 
 @login_required
 @permission_required('invent.change_inventoryitem', raise_exception=True)

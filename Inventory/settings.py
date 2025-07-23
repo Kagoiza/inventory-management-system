@@ -157,5 +157,5 @@ LOGIN_REDIRECT_URL = '/' # Redirect to the root (which is requestor_dashboard in
 LOGOUT_REDIRECT_URL = 'login'
 
 # --- SESSION TIMEOUT SETTINGS ---
-SESSION_COOKIE_AGE = 600  # <-- 20 minutes (1200 seconds) -->
+SESSION_COOKIE_AGE = 3600  # <-- 1 hour (3600 seconds) -->
 SESSION_EXPIRE_AT_BROWSER_CLOSE = False # Changed to False for persistent sessions until timeout
